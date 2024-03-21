@@ -8,7 +8,7 @@ Maintained by [VermeilChan](https://github.com/VermeilChan).
 
 ## Overview
 
-The Replenish is a simple plugin that aims to enhance farming mechanics. This plugin automates the replanting process when crops such as wheat, potatoes, carrots, nether warts, and cocoa beans are harvested. Instead of manually replanting.
+Replenish is a simple plugin that aims to enhance farming mechanics. It automates the replanting process when crops such as wheat, potatoes, carrots, nether warts, and cocoa beans are harvested. Instead of manually replanting.
 
 to put it simply, a copycat of [Replenish](https://wiki.hypixel.net/Replenish_Enchantment) from hypixel skyblock :)
 
@@ -42,7 +42,7 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 ## TODO
 
 - Add a 15 millisecond delay between replants.
-- REFACTOR THE WHOLE CODE, the code is soo bad 💀.
+- REFACTOR THE WHOLE THING, the code is soo bad 💀.
 
 ## Known Issues
 
