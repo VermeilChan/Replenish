@@ -1,0 +1,8 @@
+name: Replenish
+version: '${project.version}'
+main: me.vermeil.replenish.Replenish
+api-version: '1.20'
+load: STARTUP
+authors: [VermeilChan]
+description: Recreation of the Replenish enchantment from Hypixel Skyblock.
+website: https://github.com/VermeilChan/Replenish
