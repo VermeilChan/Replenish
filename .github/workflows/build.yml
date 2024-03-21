@@ -22,13 +22,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build with Maven (Java 17)
-        run: mvn -B package --file pom-java17.xml
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
 
       - name: Upload Artifact Java 17
         uses: actions/upload-artifact@v4.3.1
         with:
-          name: Replenish-Dev-Java17
+          name: Replenish-Dev-17
           path: target/*.jar
 
   build_java_8:
@@ -45,11 +45,11 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
 
-      - name: Build with Maven (Java 8)
-        run: mvn -B package --file pom-java8.xml
+      - name: Build with Maven
+        run: mvn -B package --file pom-8.xml
 
       - name: Upload Artifact Java 8
         uses: actions/upload-artifact@v4.3.1
         with:
-          name: Replenish-Dev-Java8
+          name: Replenish-Dev-8
           path: target/*.jar
