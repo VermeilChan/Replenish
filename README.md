@@ -48,3 +48,4 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 - In certain situations, replanting might fail.
 - Fortune level is not taken into account.
+- Doesn't drop the right amount of drops.
