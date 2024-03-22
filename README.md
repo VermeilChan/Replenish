@@ -14,7 +14,7 @@ to put it simply, a copycat of [Replenish](https://wiki.hypixel.net/Replenish_En
 
 ## Requirements
 
-- I didn't really test it, but it should work most versions.
+- I didn't really test it, but it should work most versions 1.17+.
 - Spigot/Paper server
 - For small server (for now)
 
