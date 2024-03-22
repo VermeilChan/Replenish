@@ -60,12 +60,17 @@ public class Replenish extends JavaPlugin implements Listener {
     }
 
     private Material materialToSeed(Material crop) {
-        return switch (crop) {
-            case WHEAT -> Material.WHEAT_SEEDS;
-            case POTATOES -> Material.POTATO;
-            case CARROTS -> Material.CARROT;
-            case NETHER_WART -> Material.NETHER_WART;
-            default -> null;
-        };
+        switch (crop) {
+            case WHEAT:
+                return Material.WHEAT_SEEDS;
+            case POTATOES:
+                return Material.POTATO;
+            case CARROTS:
+                return Material.CARROT;
+            case NETHER_WART:
+                return Material.NETHER_WART;
+            default:
+                return null;
+        }
     }
 }
