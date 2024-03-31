@@ -41,7 +41,7 @@ This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 ## TODO
 
-- Add a 15 millisecond delay between replants.
+- Add a 3/5 millisecond delay between replants.
 - REFACTOR THE WHOLE THING, the code is soo bad 💀.
 
 ## Known Issues
