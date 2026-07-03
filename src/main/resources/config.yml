@@ -6,7 +6,7 @@
 # GENERAL SETTINGS
 # --------------------------
 
-config-version: 3              # DON'T TOUCH THIS!!!
+config-version: 4              # DON'T TOUCH THIS!!!
 
 enabled: true                  # master switch: false disables all replanting globally
 requirePlayerSeed: true        # consume 1 seed from inventory on mature harvest
@@ -29,21 +29,11 @@ crops:
   cocoa: true
   beetroots: true
 
-  # TORCHFLOWER: The CROP (grown from seeds) will be replanted automatically.
-  # The decorative TORCHFLOWER flower block (placed from inventory) is NOT a crop
-  # and will not be replanted – players will see an in-game message explaining this.
-  torchflower: true
-
-  # PITCHER PLANT: The CROP (grown from seeds) will be replanted.
-  # The decorative PITCHER PLANT block (placed from inventory) is NOT a crop.
-  pitcher_crop: true
-
 # --------------------------
 # CHAT MESSAGES (customize these)
 # --------------------------
 
 messages:
   inventory-full: "&8[&eReplenish&8] &8» &7Your inventory is full! Items dropped on the ground."
-  placed-flower: "&8[&eReplenish&8] &8» &7This is a &eplaced flower&7, not a &ecrop&7. Only crops &egrown from seeds &7on farmland are replanted."
   requires-tool: "&8[&eReplenish&8] &8» &e{crop} &7requires &e{tool}&7."
   need-seed: "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c."

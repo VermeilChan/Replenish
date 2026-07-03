@@ -72,7 +72,7 @@ public class ReplenishPlugin extends JavaPlugin {
         FileConfiguration config = getConfig();
 
         boolean regenerated = false;
-        if (!config.contains("config-version") || config.getInt("config-version", 1) < 3) {
+        if (!config.contains("config-version") || config.getInt("config-version", 1) < 4) {
             getLogger().warning("Config version mismatch. Generating missing values...");
             config.options().copyDefaults(true);
             config.set("config-version", 3);
@@ -125,7 +125,6 @@ public class ReplenishPlugin extends JavaPlugin {
                         current.maxReplantsPerTick,
                         current.cropEnabled,
                         current.msgInventoryFull,
-                        current.msgPlacedFlower,
                         current.msgRequiresTool,
                         current.msgNeedSeed);
         configCacheRef.set(newCache);
@@ -159,7 +158,6 @@ public class ReplenishPlugin extends JavaPlugin {
         final Map<Material, Boolean> cropEnabled;
 
         final String msgInventoryFull;
-        final String msgPlacedFlower;
         final String msgRequiresTool;
         final String msgNeedSeed;
 
@@ -171,7 +169,6 @@ public class ReplenishPlugin extends JavaPlugin {
                 int maxReplantsPerTick,
                 Map<Material, Boolean> cropEnabled,
                 String msgInventoryFull,
-                String msgPlacedFlower,
                 String msgRequiresTool,
                 String msgNeedSeed) {
             this.enabled = enabled;
@@ -181,7 +178,6 @@ public class ReplenishPlugin extends JavaPlugin {
             this.maxReplantsPerTick = maxReplantsPerTick;
             this.cropEnabled = cropEnabled;
             this.msgInventoryFull = msgInventoryFull;
-            this.msgPlacedFlower = msgPlacedFlower;
             this.msgRequiresTool = msgRequiresTool;
             this.msgNeedSeed = msgNeedSeed;
         }
@@ -195,8 +191,6 @@ public class ReplenishPlugin extends JavaPlugin {
                     DEFAULT_MAX_REPLANTS,
                     defaultCrops(),
                     "&8[&eReplenish&8] &8» &7Your inventory is full! Items dropped on the ground.",
-                    "&8[&eReplenish&8] &8» &7This is a &eplaced flower&7, not a &ecrop&7. Only"
-                            + " crops &egrown from seeds &7on farmland are replanted.",
                     "&8[&eReplenish&8] &8» &e{crop} &7requires &e{tool}&7.",
                     "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c.");
         }
@@ -214,10 +208,6 @@ public class ReplenishPlugin extends JavaPlugin {
                             "&8[&eReplenish&8] &8» &7Your inventory is full! Items dropped on the"
                                     + " ground."),
                     config.getString(
-                            "messages.placed-flower",
-                            "&8[&eReplenish&8] &8» &7This is a &eplaced flower&7, not a &ecrop&7."
-                                + " Only crops &egrown from seeds &7on farmland are replanted."),
-                    config.getString(
                             "messages.requires-tool",
                             "&8[&eReplenish&8] &8» &e{crop} &7requires &e{tool}&7."),
                     config.getString(
@@ -232,8 +222,6 @@ public class ReplenishPlugin extends JavaPlugin {
             map.put(Material.NETHER_WART, config.getBoolean("crops.nether_wart", true));
             map.put(Material.COCOA, config.getBoolean("crops.cocoa", true));
             map.put(Material.BEETROOTS, config.getBoolean("crops.beetroots", true));
-            map.put(Material.TORCHFLOWER_CROP, config.getBoolean("crops.torchflower", true));
-            map.put(Material.PITCHER_CROP, config.getBoolean("crops.pitcher_crop", true));
             return map;
         }
 
@@ -245,8 +233,6 @@ public class ReplenishPlugin extends JavaPlugin {
             map.put(Material.NETHER_WART, true);
             map.put(Material.COCOA, true);
             map.put(Material.BEETROOTS, true);
-            map.put(Material.TORCHFLOWER_CROP, true);
-            map.put(Material.PITCHER_CROP, true);
             return map;
         }
     }

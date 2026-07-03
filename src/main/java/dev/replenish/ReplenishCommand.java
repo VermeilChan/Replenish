@@ -148,16 +148,6 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                         "  "
                                 + (plugin.isCropEnabled(Material.BEETROOTS) ? "&a✔" : "&c✖")
                                 + " &7Beetroots");
-                send(
-                        sender,
-                        "  "
-                                + (plugin.isCropEnabled(Material.TORCHFLOWER_CROP) ? "&a✔" : "&c✖")
-                                + " &7Torchflower");
-                send(
-                        sender,
-                        "  "
-                                + (plugin.isCropEnabled(Material.PITCHER_CROP) ? "&a✔" : "&c✖")
-                                + " &7Pitcher Pods");
                 send(sender, "");
 
                 send(sender, LINE);

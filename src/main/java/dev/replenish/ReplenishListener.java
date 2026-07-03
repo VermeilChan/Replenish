@@ -45,9 +45,7 @@ public class ReplenishListener implements Listener {
                     Material.POTATOES,
                     Material.NETHER_WART,
                     Material.COCOA,
-                    Material.BEETROOTS,
-                    Material.TORCHFLOWER_CROP,
-                    Material.PITCHER_CROP);
+                    Material.BEETROOTS);
 
     private static final Set<Material> SEED_TYPES =
             EnumSet.of(
@@ -56,15 +54,10 @@ public class ReplenishListener implements Listener {
                     Material.POTATO,
                     Material.NETHER_WART,
                     Material.COCOA_BEANS,
-                    Material.BEETROOT_SEEDS,
-                    Material.TORCHFLOWER_SEEDS,
-                    Material.PITCHER_POD);
-
-    private static final Set<Material> DECORATIVE_FLOWERS =
-            EnumSet.of(Material.TORCHFLOWER, Material.PITCHER_PLANT);
+                    Material.BEETROOT_SEEDS);
 
     private static final BlockFace[] HORIZONTAL_FACES = {
-        BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
+            BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
     };
 
     private static final EnumSet<Material> HOE_TOOLS =
@@ -194,22 +187,6 @@ public class ReplenishListener implements Listener {
         Block block = event.getBlock();
         Material cropType = block.getType();
 
-        if (DECORATIVE_FLOWERS.contains(cropType)) {
-            Block below = block.getRelative(BlockFace.DOWN);
-            if (below.getType() == Material.FARMLAND) {
-                if (canSendMessage(player)) {
-                    player.sendMessage(ColorUtils.color(config.msgPlacedFlower));
-                    player.playSound(
-                            player.getLocation(),
-                            Sound.ENTITY_VILLAGER_NO,
-                            SoundCategory.PLAYERS,
-                            1.0f,
-                            1.0f);
-                }
-            }
-            return;
-        }
-
         if (!SUPPORTED_CROPS.contains(cropType) || !plugin.isCropEnabled(cropType)) return;
 
         ItemStack toolInHand = player.getInventory().getItemInMainHand();
@@ -222,9 +199,7 @@ public class ReplenishListener implements Listener {
                 || cropType == Material.CARROTS
                 || cropType == Material.POTATOES
                 || cropType == Material.NETHER_WART
-                || cropType == Material.BEETROOTS
-                || cropType == Material.TORCHFLOWER_CROP
-                || cropType == Material.PITCHER_CROP) {
+                || cropType == Material.BEETROOTS) {
             hasRequiredTool = HOE_TOOLS.contains(toolInHandType);
         }
 
@@ -364,8 +339,6 @@ public class ReplenishListener implements Listener {
         if (crop == Material.NETHER_WART) return Material.NETHER_WART;
         if (crop == Material.COCOA) return Material.COCOA_BEANS;
         if (crop == Material.BEETROOTS) return Material.BEETROOT_SEEDS;
-        if (crop == Material.TORCHFLOWER_CROP) return Material.TORCHFLOWER_SEEDS;
-        if (crop == Material.PITCHER_CROP) return Material.PITCHER_POD;
         return null;
     }
 }
