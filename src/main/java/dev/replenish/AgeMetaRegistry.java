@@ -28,7 +28,7 @@ public final class AgeMetaRegistry {
         this.metadataMap = new EnumMap<>(Material.class);
         Material[] supportedCrops = {
             Material.WHEAT, Material.CARROTS, Material.POTATOES, Material.NETHER_WART,
-            Material.COCOA, Material.BEETROOTS, Material.TORCHFLOWER_CROP, Material.PITCHER_CROP
+            Material.COCOA, Material.BEETROOTS
         };
 
         for (Material material : supportedCrops) {
