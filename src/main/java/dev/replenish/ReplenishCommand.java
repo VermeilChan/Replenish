@@ -27,12 +27,22 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
     }
 
     private static String usage(String base) {
-        return PREFIX + ARROW + "&cUsage: &7/" + base + " &f<status | toggle | reload | version>";
+        return PREFIX
+                + ARROW
+                + "&cUnknown subcommand. &7Use &f/"
+                + base
+                + " &7for a list of commands.";
     }
 
     private boolean isDenied(CommandSender sender, String perm) {
         if (!sender.hasPermission(perm)) {
-            send(sender, PREFIX + ARROW + "&cPermission denied. &8(&7" + perm + "&8)");
+            send(
+                    sender,
+                    PREFIX
+                            + ARROW
+                            + "&cYou don't have permission to do that. &8(&7requires "
+                            + perm
+                            + "&8)");
             return true;
         }
         return false;
@@ -48,10 +58,10 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                             + plugin.getDescription().getVersion()
                             + " &8]&m      &r");
             send(sender, "");
-            send(sender, "&e/replenish status &8- &7Shows plugin information.");
-            send(sender, "&e/replenish reload &8- &7Reload configuration.");
-            send(sender, "&e/replenish toggle &8- &7Enable or disable the plugin.");
-            send(sender, "&e/replenish version &8- &7Shows version information.");
+            send(sender, "&e/replenish status &8- &7Shows current settings and enabled crops.");
+            send(sender, "&e/replenish reload &8- &7Reloads config.yml without restarting.");
+            send(sender, "&e/replenish toggle &8- &7Turns replanting on or off for everyone.");
+            send(sender, "&e/replenish version &8- &7Shows version and update info.");
             send(sender, "");
             send(sender, LINE);
             return true;
@@ -69,7 +79,11 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                 plugin.setGloballyEnabled(nowEnabled);
 
                 String state = nowEnabled ? "&a&lENABLED" : "&c&lDISABLED";
-                sendPrefixed(sender, "Global replenish is now " + state + "&7.");
+                String detail =
+                        nowEnabled
+                                ? "Crops will replant themselves again."
+                                : "Crops will no longer replant. Harvests behave like vanilla.";
+                sendPrefixed(sender, "Replenish is now " + state + "&7. " + detail);
                 return true;
             }
             case "reload" -> {
@@ -79,22 +93,26 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                 var cfg = plugin.getConfigCache();
 
                 send(sender, "");
-                send(sender, "&8&m      &8[ &e&lReload Complete &8]&m      &r");
+                send(sender, "&8&m      &8[ &e&lConfig Reloaded &8]&m      &r");
                 send(sender, "");
-                send(sender, "  " + DOT + "&7Enabled: " + (cfg.enabled ? "&atrue" : "&cfalse"));
-                send(sender, "  " + DOT + "&7Delay: &f" + cfg.replantDelayTicks + " tick");
+                send(sender, "  " + DOT + "&7Replanting: " + (cfg.enabled ? "&aOn" : "&cOff"));
+                send(
+                        sender,
+                        "  " + DOT + "&7Replant delay: &f" + cfg.replantDelayTicks + " tick(s)");
                 send(
                         sender,
                         "  "
                                 + DOT
-                                + "&7Direct Pickup: "
-                                + (cfg.directPickup ? "&atrue" : "&cfalse"));
+                                + "&7Give drops directly to player: "
+                                + (cfg.directPickup ? "&aYes" : "&cNo, drop on ground"));
                 send(
                         sender,
                         "  "
                                 + DOT
-                                + "&7Seeds Required: "
-                                + (cfg.requirePlayerSeed ? "&atrue" : "&cfalse"));
+                                + "&7Require a seed to replant: "
+                                + (cfg.requirePlayerSeed ? "&aYes" : "&cNo"));
+                send(sender, "");
+                send(sender, "&7Your config.yml changes are now live.");
                 send(sender, "");
                 send(sender, LINE);
                 return true;
@@ -109,47 +127,44 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                 send(sender, "&8&m      &8[ &e&lReplenish &7v" + version + " &8]&m      &r");
                 send(sender, "");
 
-                send(sender, (cfg.enabled ? "&a✔ &fPlugin Enabled" : "&c✘ &fPlugin Disabled"));
                 send(
                         sender,
-                        (cfg.requirePlayerSeed ? "&a✔ &fRequire Seeds" : "&c✘ &fRequire Seeds"));
-                send(sender, (cfg.directPickup ? "&a✔ &fDirect Pickup" : "&c✘ &fDirect Pickup"));
+                        (cfg.enabled
+                                ? "&a✔ &fReplanting is active"
+                                : "&c✘ &fReplanting is disabled"));
+                send(
+                        sender,
+                        (cfg.requirePlayerSeed
+                                ? "&a✔ &fPlayers must have a spare seed to replant"
+                                : "&c✘ &fNo seed needed to replant"));
+                send(
+                        sender,
+                        (cfg.directPickup
+                                ? "&a✔ &fHarvested crops go straight to inventory"
+                                : "&c✘ &fHarvested crops drop on the ground"));
                 send(sender, "");
 
-                send(sender, "&eReplant Delay: &f" + cfg.replantDelayTicks + " tick");
-                send(sender, "&eQueue Limit: &f" + cfg.maxReplantsPerTick + "/tick");
+                send(sender, "&eTiming");
+                send(
+                        sender,
+                        "  " + DOT + "&7Replants after: &f" + cfg.replantDelayTicks + " tick(s)");
+                send(
+                        sender,
+                        "  " + DOT + "&7Replant limit: &f" + cfg.maxReplantsPerTick + " per tick");
                 send(sender, "");
 
-                send(sender, "&eSupported Crops");
+                send(sender, "&eCrops that auto-replant");
                 send(sender, "");
-                send(
-                        sender,
-                        "  " + (plugin.isCropEnabled(Material.WHEAT) ? "&a✔" : "&c✖") + " &7Wheat");
-                send(
-                        sender,
-                        "  "
-                                + (plugin.isCropEnabled(Material.CARROTS) ? "&a✔" : "&c✖")
-                                + " &7Carrots");
-                send(
-                        sender,
-                        "  "
-                                + (plugin.isCropEnabled(Material.POTATOES) ? "&a✔" : "&c✖")
-                                + " &7Potatoes");
-                send(
-                        sender,
-                        "  "
-                                + (plugin.isCropEnabled(Material.NETHER_WART) ? "&a✔" : "&c✖")
-                                + " &7Nether Wart");
-                send(
-                        sender,
-                        "  " + (plugin.isCropEnabled(Material.COCOA) ? "&a✔" : "&c✖") + " &7Cocoa");
-                send(
-                        sender,
-                        "  "
-                                + (plugin.isCropEnabled(Material.BEETROOTS) ? "&a✔" : "&c✖")
-                                + " &7Beetroots");
+                appendCropLine(sender, Material.WHEAT, "Wheat");
+                appendCropLine(sender, Material.CARROTS, "Carrots");
+                appendCropLine(sender, Material.POTATOES, "Potatoes");
+                appendCropLine(sender, Material.NETHER_WART, "Nether Wart");
+                appendCropLine(sender, Material.COCOA, "Cocoa");
+                appendCropLine(sender, Material.BEETROOTS, "Beetroots");
                 send(sender, "");
 
+                send(sender, "&7Tip: &8/&7replenish reload &7after editing config.yml.");
+                send(sender, "");
                 send(sender, LINE);
                 return true;
             }
@@ -159,67 +174,74 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                 send(sender, "");
                 send(sender, "&8&m      &8[ &e&lVersion Info &8]&m      &r");
                 send(sender, "");
-                send(
-                        sender,
-                        "  " + DOT + "&7Plugin Version: &f" + plugin.getDescription().getVersion());
-                send(sender, "  " + DOT + "&7Server Version: &f" + plugin.getServer().getVersion());
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&7Java Version: &f"
-                                + System.getProperty("java.version")
-                                + " &7("
-                                + System.getProperty("java.vendor")
-                                + " "
-                                + System.getProperty("java.vm.name")
-                                + ")");
 
                 UpdateChecker uc = plugin.getUpdateChecker();
                 if (uc == null || !uc.isEnabled()) {
-                    send(sender, "  " + DOT + "&7Update Check: &cDisabled");
-                    send(sender, "  " + DOT + "&7Build Type: &eUnknown");
+                    send(
+                            sender,
+                            "  "
+                                    + DOT
+                                    + "&7You're running: &fv"
+                                    + plugin.getDescription().getVersion());
+                    send(sender, "  " + DOT + "&7Update checks: &cDisabled in config.yml");
                 } else if (!uc.isCheckCompleted()) {
-                    send(sender, "  " + DOT + "&7Update Check: &fChecking...");
-                    send(sender, "  " + DOT + "&7Build Type: &eUnknown");
+                    send(
+                            sender,
+                            "  "
+                                    + DOT
+                                    + "&7You're running: &fv"
+                                    + plugin.getDescription().getVersion());
+                    send(
+                            sender,
+                            "  " + DOT + "&7Update check: &fStill checking, try again shortly");
                 } else if (uc.isUpdateAvailable()) {
                     send(
                             sender,
                             "  "
                                     + DOT
-                                    + "&7Update Status: &eUpdate available &8(&f"
+                                    + "&eA new version is available! &8(&fv"
                                     + uc.getCurrentVersion()
-                                    + " &7➟ &e"
+                                    + " &7➟ &ev"
                                     + uc.getLatestVersion()
                                     + "&8)");
                     send(
                             sender,
                             "  "
                                     + DOT
-                                    + "&7Download:"
+                                    + "&7Get it here:"
                                     + " &bhttps://github.com/Mitra-88/Replenish/releases/latest");
-                    send(sender, "  " + DOT + "&7Build Type: &cStable (Outdated)");
                 } else if (uc.isLocalNewer()) {
                     send(
                             sender,
                             "  "
                                     + DOT
-                                    + "&7Update Status: &dDev Build &8(&f"
+                                    + "&dYou're on a development build &8(&fv"
                                     + uc.getCurrentVersion()
-                                    + " &7➟ newer than &e"
+                                    + "&8, newer than the latest release &7v"
                                     + uc.getLatestVersion()
                                     + "&8)");
-                    send(sender, "  " + DOT + "&7Build Type: &dDevelopment Build");
                 } else {
                     send(
                             sender,
                             "  "
                                     + DOT
-                                    + "&7Update Status: &aUp to date &8(&f"
+                                    + "&aYou're up to date! &8(&fv"
                                     + uc.getCurrentVersion()
                                     + "&8)");
-                    send(sender, "  " + DOT + "&7Build Type: &aStable Release");
                 }
+
+                send(sender, "");
+                send(sender, "&7Server details");
+                send(sender, "  " + DOT + "&7Server: &f" + plugin.getServer().getVersion());
+                send(
+                        sender,
+                        "  "
+                                + DOT
+                                + "&7Java: &f"
+                                + System.getProperty("java.version")
+                                + " &8(&7"
+                                + System.getProperty("java.vendor")
+                                + "&8)");
 
                 send(sender, "");
                 send(sender, LINE);
@@ -230,6 +252,11 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
         }
+    }
+
+    private void appendCropLine(CommandSender sender, Material material, String displayName) {
+        boolean on = plugin.isCropEnabled(material);
+        send(sender, "  " + (on ? "&a✔" : "&c✖") + " &7" + displayName);
     }
 
     @Override

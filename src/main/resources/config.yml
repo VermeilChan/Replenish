@@ -34,8 +34,9 @@ crops:
 # --------------------------
 # CHAT MESSAGES (customize these)
 # --------------------------
+# Placeholders: {crop}, {tool}, {seed}, {count}
 
 messages:
-  inventory-full: "&8[&eReplenish&8] &8» &7Your inventory is full! Items dropped on the ground."
-  requires-tool: "&8[&eReplenish&8] &8» &e{crop} &7requires &e{tool}&7."
-  need-seed: "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c."
+  inventory-full: "&8[&eReplenish&8] &8» &7Your inventory was full, so some items dropped on the ground instead."
+  requires-tool: "&8[&eReplenish&8] &8» &7You need a &e{tool} &7to harvest &e{crop}&7."
+  need-seed: "&8[&eReplenish&8] &8» &7You need &e{count}x {seed} &7in your inventory to replant this."

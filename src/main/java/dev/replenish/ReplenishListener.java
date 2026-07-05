@@ -207,10 +207,7 @@ public class ReplenishListener implements Listener {
 
         if (!hasRequiredTool) {
             if (canSendMessage(player)) {
-                String cropName = cropType.name().replace("_", " ");
-                cropName =
-                        cropName.substring(0, 1).toUpperCase()
-                                + cropName.substring(1).toLowerCase();
+                String cropName = prettyName(cropType);
                 String toolName = cropType == Material.COCOA ? "Axe" : "Hoe";
                 String msg =
                         config.msgRequiresTool
@@ -254,11 +251,9 @@ public class ReplenishListener implements Listener {
             if (seedMaterial == null) return;
             if (!SeedIndex.consume(player, seedMaterial)) {
                 if (canSendMessage(player)) {
-                    String seedName = seedMaterial.name().replace("_", " ");
-                    seedName =
-                            seedName.substring(0, 1).toUpperCase()
-                                    + seedName.substring(1).toLowerCase();
-                    String msg = config.msgNeedSeed.replace("{seed}", seedName);
+                    String seedName = prettyName(seedMaterial);
+                    String msg =
+                            config.msgNeedSeed.replace("{count}", "1").replace("{seed}", seedName);
                     player.sendMessage(ColorUtils.color(msg));
                     player.playSound(
                             player.getLocation(),
@@ -342,5 +337,21 @@ public class ReplenishListener implements Listener {
         if (crop == Material.COCOA) return Material.COCOA_BEANS;
         if (crop == Material.BEETROOTS) return Material.BEETROOT_SEEDS;
         return null;
+    }
+
+    private static String prettyName(Material material) {
+        String raw = material.name().replace('_', ' ').toLowerCase(Locale.ROOT);
+        StringBuilder result = new StringBuilder(raw.length());
+        boolean capitalizeNext = true;
+        for (char c : raw.toCharArray()) {
+            if (capitalizeNext && Character.isLetter(c)) {
+                result.append(Character.toUpperCase(c));
+                capitalizeNext = false;
+            } else {
+                result.append(c);
+            }
+            if (c == ' ') capitalizeNext = true;
+        }
+        return result.toString();
     }
 }
