@@ -136,6 +136,11 @@ public final class UpdateChecker {
         return enabled;
     }
 
+    public boolean isLocalNewer() {
+        if (!checkCompleted || latestVersion.equals("Unknown")) return false;
+        return compareVersions(currentVersion, latestVersion) > 0;
+    }
+
     private void console(String message) {
         Bukkit.getConsoleSender().sendMessage(ColorUtils.color(message));
     }
