@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ReplenishPlugin extends JavaPlugin {
 
     private static final int DEFAULT_REPLANT_DELAY_TICKS = 1;
-    private static final int DEFAULT_MAX_REPLANTS = 4096;
+    private static final int DEFAULT_MAX_REPLANTS = 1024;
     private static final int MIN_REPLANTS_PER_TICK = 256;
     int CONFIG_VERSION = 4;
 
@@ -73,7 +73,8 @@ public class ReplenishPlugin extends JavaPlugin {
         FileConfiguration config = getConfig();
 
         boolean regenerated = false;
-        if (!config.contains("config-version") || config.getInt("config-version", 1) < CONFIG_VERSION) {
+        if (!config.contains("config-version")
+                || config.getInt("config-version", 1) < CONFIG_VERSION) {
             getLogger().warning("Config version mismatch. Generating missing values...");
             config.options().copyDefaults(true);
             config.set("config-version", CONFIG_VERSION);
