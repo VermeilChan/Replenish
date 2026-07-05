@@ -12,9 +12,11 @@ enabled: true                  # master switch: false disables all replanting gl
 requirePlayerSeed: true        # consume 1 seed from inventory on mature harvest
 directPickup: true             # drops go straight to the player
 replantDelayTicks: 1           # 1 tick = 50ms
-maxReplantsPerTick: 1024       # maximum crops replanted per tick (20 ticks/second)
-# raise this on beefier servers if replants lag behind
-# lower it on weaker servers to reduce load
+
+maxReplantsPerTick: 1024      # maximum crops replanted per tick (20 ticks/second)
+                              # raise this on beefier servers if replants lag behind
+                              # lower it on weaker servers to reduce load
+
 checkUpdates: true             # check GitHub for new releases on server startup
 
 # --------------------------
