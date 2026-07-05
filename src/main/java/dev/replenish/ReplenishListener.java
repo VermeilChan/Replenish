@@ -57,7 +57,7 @@ public class ReplenishListener implements Listener {
                     Material.BEETROOT_SEEDS);
 
     private static final BlockFace[] HORIZONTAL_FACES = {
-            BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
+        BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
     };
 
     private static final EnumSet<Material> HOE_TOOLS =
@@ -86,14 +86,16 @@ public class ReplenishListener implements Listener {
 
         this.maxAges = new EnumMap<>(Material.class);
         for (Material crop : SUPPORTED_CROPS) {
-            AgeMetaRegistry.AgeMeta meta = ageMetaRegistry.get(crop);
-            if (meta != null) {
-                maxAges.put(crop, meta.maximumAge);
+            AgeMetaRegistry.CropInfo info = ageMetaRegistry.get(crop);
+            if (info != null) {
+                maxAges.put(crop, info.maximumAge);
             } else {
                 maxAges.put(crop, 0);
                 plugin.getLogger()
                         .warning(
-                                "Missing AgeMeta for " + crop + ", replant may not work correctly");
+                                "Missing CropInfo for "
+                                        + crop
+                                        + ", replant may not work correctly");
             }
         }
     }
