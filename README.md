@@ -8,7 +8,7 @@ Tiny, blazing-fast auto-replant plugin for Spigot/Paper, inspired by Hypixel's R
 
 ## What it does
 
-- 🌾 Auto-replants Wheat, Carrots, Potatoes, Nether Wart, Cocoa, Beetroots, Torchflowers, and Pitcher Crops
+- 🌾 Auto-replants Wheat, Carrots, Potatoes, Nether Wart, Cocoa, Beetroots
 - 🌱 Immature crops keep their current growth stage
 - 🎒 Optional seed consumption (on by default)
 - 📦 Optional direct pickup into your inventory (on by default)
@@ -77,6 +77,4 @@ crops:
   nether_wart: true
   cocoa: true
   beetroots: true
-  torchflower: true
-  pitcher_crop: true
 ```
