@@ -5,9 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Directional;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Arrays;
@@ -19,10 +17,6 @@ public final class ReplantQueue {
     private static final int TIME_WHEEL_SIZE = 1 << TIME_WHEEL_BITS;
     private static final int TIME_WHEEL_MASK = TIME_WHEEL_SIZE - 1;
     private static final int INITIAL_POOL_SIZE = 1 << 14;
-
-    private static final BlockFace[] FACES = {
-        BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
-    };
 
     private static final int AGE_MASK = 0xFF;
     private static final int FACE_SHIFT = 8;
@@ -100,8 +94,11 @@ public final class ReplantQueue {
             BlockFace cocoaFacingDirection) {
         int delay = Math.max(1, delayTicks);
         if (delay >= TIME_WHEEL_SIZE) {
-            plugin.getLogger()
-                    .warning("Replant delay truncation triggered for block at " + locString(block));
+            WarningThrottle.log(
+                    plugin,
+                    Level.WARNING,
+                    WarningThrottle.CAT_DELAY_TRUNCATION,
+                    "Replant delay truncation triggered for block at " + locString(block));
             delay = TIME_WHEEL_SIZE - 1;
         }
         int slot = (cursor + delay) & TIME_WHEEL_MASK;
@@ -164,21 +161,43 @@ public final class ReplantQueue {
 
             if (loaded) {
                 try {
-                    replant(head);
+                    Material plant = poolMaterials[head];
+                    if (plant != null) {
+                        AgeMetaRegistry.CropInfo info = ageMetaRegistry.get(plant);
+                        if (info == null) {
+                            WarningThrottle.log(
+                                    plugin,
+                                    Level.WARNING,
+                                    WarningThrottle.CAT_AGE_DATA_MISSING,
+                                    "No age data found for plant: "
+                                            + plant
+                                            + ", skipping replant at "
+                                            + locString(b));
+                        } else if (info.isCocoa) {
+                            replantCocoa(head, info);
+                        } else {
+                            replantNormal(head, info);
+                        }
+                    }
                 } catch (Exception e) {
-                    plugin.getLogger()
-                            .log(Level.WARNING, "Failed to replant crop at " + locString(b), e);
+                    WarningThrottle.log(
+                            plugin,
+                            Level.WARNING,
+                            WarningThrottle.CAT_REPLANT_FAIL,
+                            "Failed to replant crop at " + locString(b) + ": " + e.getMessage());
                 }
                 release(head);
                 processed++;
             } else {
                 int retries = (poolMeta[head] >>> RETRY_SHIFT) & RETRY_MASK;
                 if (retries >= MAX_UNLOAD_RETRIES) {
-                    plugin.getLogger()
-                            .warning(
-                                    "Abandoning replant at "
-                                            + locString(b)
-                                            + " - chunk remained unloaded.");
+                    WarningThrottle.log(
+                            plugin,
+                            Level.WARNING,
+                            WarningThrottle.CAT_ABANDONED,
+                            "Abandoning replant at "
+                                    + locString(b)
+                                    + " - chunk remained unloaded.");
                     release(head);
                     processed++;
                 } else {
@@ -202,7 +221,7 @@ public final class ReplantQueue {
         cursor = nextSlot;
     }
 
-    private void replant(int index) {
+    private void replantNormal(int index, AgeMetaRegistry.CropInfo info) {
         Block block = poolBlocks[index];
         if (block == null || !block.getType().isAir()) return;
 
@@ -211,49 +230,33 @@ public final class ReplantQueue {
 
         int metadata = poolMeta[index];
         int targetAge = metadata & AGE_MASK;
-        BlockFace face = ordinalToFace((metadata >>> FACE_SHIFT) & FACE_MASK);
 
-        if (ageMetaRegistry == null) return;
+        Material below = block.getRelative(BlockFace.DOWN).getType();
+        if (info.requiresFarmland && below != Material.FARMLAND) return;
+        if (info.requiresSoulSand && below != Material.SOUL_SAND) return;
 
-        AgeMetaRegistry.AgeMeta meta = ageMetaRegistry.get(plant);
-        if (meta == null || meta.baseData == null) {
-            plugin.getLogger()
-                    .warning(
-                            "No age data found for plant: "
-                                    + plant
-                                    + ", skipping replant at "
-                                    + locString(block));
+        BlockData data = info.getBlockData(targetAge);
+        block.setBlockData(data, false);
+    }
+
+    private void replantCocoa(int index, AgeMetaRegistry.CropInfo info) {
+        Block block = poolBlocks[index];
+        if (block == null || !block.getType().isAir()) return;
+
+        Material plant = poolMaterials[index];
+        if (plant != Material.COCOA) return;
+
+        int metadata = poolMeta[index];
+        int targetAge = metadata & AGE_MASK;
+        int faceOrd = (metadata >>> FACE_SHIFT) & FACE_MASK;
+
+        BlockFace face = ordinalToFace(faceOrd);
+        Block attached = block.getRelative(face);
+        if (!CropConstants.JUNGLE_ANCHOR_BLOCKS.contains(attached.getType())) {
             return;
         }
-        int maxAge = meta.maximumAge;
 
-        BlockData data = meta.baseData.clone();
-
-        if (plant == Material.COCOA) {
-            if (data instanceof Directional directional) {
-                directional.setFacing(face);
-                Block attached = block.getRelative(face);
-                if (!CropConstants.JUNGLE_ANCHOR_BLOCKS.contains(attached.getType())) {
-                    return;
-                }
-            } else {
-                return;
-            }
-        } else {
-            Material below = block.getRelative(BlockFace.DOWN).getType();
-            if (plant == Material.NETHER_WART) {
-                if (below != Material.SOUL_SAND) return;
-            } else {
-                if (below != Material.FARMLAND) return;
-            }
-        }
-
-        if (data instanceof Ageable ageable) {
-            if (maxAge > 0) {
-                ageable.setAge(Math.min(maxAge, targetAge));
-            }
-        }
-
+        BlockData data = info.getCocoaBlockData(targetAge, faceOrd);
         block.setBlockData(data, false);
     }
 
@@ -321,6 +324,6 @@ public final class ReplantQueue {
     }
 
     private static BlockFace ordinalToFace(int ord) {
-        return FACES[ord & 3];
+        return AgeMetaRegistry.CocoaFaces.FACES[ord & 3];
     }
 }
