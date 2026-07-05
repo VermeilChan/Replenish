@@ -165,13 +165,23 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                 send(sender, "  " + DOT + "&7Server Version: &f" + plugin.getServer().getVersion());
                 send(
                         sender,
-                        "  " + DOT + "&7Java Version: &f" + System.getProperty("java.version"));
+                        "  "
+                                + DOT
+                                + "&7Java Version: &f"
+                                + System.getProperty("java.version")
+                                + " &7("
+                                + System.getProperty("java.vendor")
+                                + " "
+                                + System.getProperty("java.vm.name")
+                                + ")");
 
                 UpdateChecker uc = plugin.getUpdateChecker();
                 if (uc == null || !uc.isEnabled()) {
                     send(sender, "  " + DOT + "&7Update Check: &cDisabled");
+                    send(sender, "  " + DOT + "&7Build Type: &eUnknown");
                 } else if (!uc.isCheckCompleted()) {
                     send(sender, "  " + DOT + "&7Update Check: &fChecking...");
+                    send(sender, "  " + DOT + "&7Build Type: &eUnknown");
                 } else if (uc.isUpdateAvailable()) {
                     send(
                             sender,
@@ -188,6 +198,18 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                                     + DOT
                                     + "&7Download:"
                                     + " &bhttps://github.com/Mitra-88/Replenish/releases/latest");
+                    send(sender, "  " + DOT + "&7Build Type: &cStable (Outdated)");
+                } else if (uc.isLocalNewer()) {
+                    send(
+                            sender,
+                            "  "
+                                    + DOT
+                                    + "&7Update Status: &dDev Build &8(&f"
+                                    + uc.getCurrentVersion()
+                                    + " &7➟ newer than &e"
+                                    + uc.getLatestVersion()
+                                    + "&8)");
+                    send(sender, "  " + DOT + "&7Build Type: &dDevelopment Build");
                 } else {
                     send(
                             sender,
@@ -196,6 +218,7 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                                     + "&7Update Status: &aUp to date &8(&f"
                                     + uc.getCurrentVersion()
                                     + "&8)");
+                    send(sender, "  " + DOT + "&7Build Type: &aStable Release");
                 }
 
                 send(sender, "");
