@@ -60,24 +60,43 @@ public class ReplenishListener implements Listener {
         BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
     };
 
-    private static final EnumSet<Material> HOE_TOOLS =
-            EnumSet.of(
-                    Material.WOODEN_HOE,
-                    Material.STONE_HOE,
-                    Material.COPPER_HOE,
-                    Material.IRON_HOE,
-                    Material.GOLDEN_HOE,
-                    Material.DIAMOND_HOE,
-                    Material.NETHERITE_HOE);
-    private static final EnumSet<Material> AXE_TOOLS =
-            EnumSet.of(
-                    Material.WOODEN_AXE,
-                    Material.STONE_AXE,
-                    Material.COPPER_AXE,
-                    Material.IRON_AXE,
-                    Material.GOLDEN_AXE,
-                    Material.DIAMOND_AXE,
-                    Material.NETHERITE_AXE);
+    private static Material resolve(String name) {
+        return Material.matchMaterial(name);
+    }
+
+    private static final Material COPPER_HOE = resolve("COPPER_HOE");
+    private static final Material COPPER_AXE = resolve("COPPER_AXE");
+
+    public static final Set<Material> HOE_TOOLS = buildHoeTools();
+    public static final Set<Material> AXE_TOOLS = buildAxeTools();
+
+    private static Set<Material> buildHoeTools() {
+        Set<Material> set = EnumSet.of(
+                Material.WOODEN_HOE,
+                Material.STONE_HOE,
+                Material.IRON_HOE,
+                Material.GOLDEN_HOE,
+                Material.DIAMOND_HOE,
+                Material.NETHERITE_HOE);
+        if (COPPER_HOE != null) {
+            set.add(COPPER_HOE);
+        }
+        return set;
+    }
+
+    private static Set<Material> buildAxeTools() {
+        Set<Material> set = EnumSet.of(
+                Material.WOODEN_AXE,
+                Material.STONE_AXE,
+                Material.IRON_AXE,
+                Material.GOLDEN_AXE,
+                Material.DIAMOND_AXE,
+                Material.NETHERITE_AXE);
+        if (COPPER_AXE != null) {
+            set.add(COPPER_AXE);
+        }
+        return set;
+    }
 
     public ReplenishListener(ReplenishPlugin plugin, AgeMetaRegistry ageMetaRegistry) {
         this.plugin = plugin;
