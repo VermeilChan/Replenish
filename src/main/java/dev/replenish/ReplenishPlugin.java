@@ -1,8 +1,10 @@
 package dev.replenish;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,16 +20,20 @@ public class ReplenishPlugin extends JavaPlugin {
     private static final int MIN_REPLANTS_PER_TICK = 256;
     int CONFIG_VERSION = 4;
 
+    private static final String PREFIX = "&8[&eReplenish&8] &7";
+
     private final AtomicReference<ConfigCache> configCacheRef =
             new AtomicReference<>(ConfigCache.getDefault());
     private volatile ReplantQueue replantQueue;
     private AgeMetaRegistry ageMetaRegistry;
     private UpdateChecker updateChecker;
+    private ConsoleCommandSender console;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         ageMetaRegistry = new AgeMetaRegistry(this);
+        console = Bukkit.getConsoleSender();
 
         reloadLocalConfig();
 
@@ -36,12 +42,12 @@ public class ReplenishPlugin extends JavaPlugin {
         for (Boolean enabled : cfg.cropEnabled.values()) {
             if (enabled) supportedCrops++;
         }
-        getLogger().info("Loaded successfully.");
-        getLogger().info("Supported crops: " + supportedCrops);
-        getLogger().info("Queue size: " + cfg.maxReplantsPerTick);
-        getLogger().info("Delay: " + cfg.replantDelayTicks + " tick");
+        sendConsole("Loaded successfully.");
+        sendConsole("Supported crops: &f" + supportedCrops);
+        sendConsole("Queue size: &f" + cfg.maxReplantsPerTick);
+        sendConsole("Delay: &f" + cfg.replantDelayTicks + " tick");
 
-        getLogger().info("Running version: v" + getDescription().getVersion());
+        sendConsole("Running version: &fv" + getDescription().getVersion());
 
         boolean checkUpdates = getConfig().getBoolean("checkUpdates", true);
         updateChecker = new UpdateChecker(this, checkUpdates);
@@ -75,7 +81,7 @@ public class ReplenishPlugin extends JavaPlugin {
         boolean regenerated = false;
         if (!config.contains("config-version")
                 || config.getInt("config-version", 1) < CONFIG_VERSION) {
-            getLogger().warning("Config version mismatch. Generating missing values...");
+            sendConsole("&eConfig version mismatch. Generating missing values...");
             config.options().copyDefaults(true);
             config.set("config-version", CONFIG_VERSION);
             regenerated = true;
@@ -94,12 +100,11 @@ public class ReplenishPlugin extends JavaPlugin {
         if (replantQueue != null) {
             int pending = replantQueue.getPendingCount();
             if (pending > 0) {
-                getLogger()
-                        .warning(
-                                "Discarded "
-                                        + pending
-                                        + " pending replants during config reload (queue processes"
-                                        + " in 1 tick)");
+                sendConsole(
+                        "&eDiscarded "
+                                + pending
+                                + " pending replants during config reload (queue processes in 1"
+                                + " tick)");
             }
             replantQueue.stop();
         }
@@ -108,7 +113,7 @@ public class ReplenishPlugin extends JavaPlugin {
 
         if (regenerated) {
             saveConfig();
-            getLogger().info("Config updated.");
+            sendConsole("Config updated.");
         }
     }
 
@@ -149,6 +154,12 @@ public class ReplenishPlugin extends JavaPlugin {
         ReplantQueue queue = this.replantQueue;
         if (queue != null)
             queue.enqueue(block, plantMaterial, delayTicks, targetAge, cocoaFacingDirection);
+    }
+
+    private void sendConsole(String message) {
+        if (console != null) {
+            console.sendMessage(ColorUtils.color(PREFIX + message));
+        }
     }
 
     public static final class ConfigCache {
