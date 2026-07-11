@@ -6,7 +6,7 @@
 # GENERAL SETTINGS
 # --------------------------
 
-config-version: 4              # DON'T TOUCH THIS!!!
+config-version: 5              # DON'T TOUCH THIS!!!
 
 enabled: true                  # master switch: false disables all replanting globally
 requirePlayerSeed: true        # consume 1 seed from inventory on mature harvest
@@ -40,3 +40,46 @@ messages:
   inventory-full: "&8[&eReplenish&8] &8» &7Your inventory was full, so some items dropped on the ground instead."
   requires-tool: "&8[&eReplenish&8] &8» &7You need a &e{tool} &7to harvest &e{crop}&7."
   need-seed: "&8[&eReplenish&8] &8» &7You need &e{count}x {seed} &7in your inventory to replant this."
+
+# --------------------------
+# SOUND EFFECTS (customize or disable)
+# --------------------------
+# Each of the four feedback sounds can be individually enabled/disabled
+# and customized with any Bukkit Sound, volume, and pitch.
+#
+# sound:  Must match a Bukkit Sound enum name (case-insensitive).
+#         Full list: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+#         Invalid names log a warning and fall back to the default.
+# volume: 0.0 (silent) to 1.0 (loudest)
+# pitch:  0.5 (low) to 2.0 (high); 1.0 = normal
+#
+# To disable a sound entirely, set enabled: false.
+
+sounds:
+  # Played when harvested crops go into your inventory
+  pickup:
+    enabled: true
+    sound: ENTITY_ITEM_PICKUP
+    volume: 1.0
+    pitch: 1.0
+
+  # Played when your inventory is full and items drop on the ground
+  inventory-full:
+    enabled: true
+    sound: BLOCK_NOTE_BLOCK_BASS
+    volume: 1.0
+    pitch: 0.5
+
+  # Played when you try to harvest without the required tool
+  denied-tool:
+    enabled: true
+    sound: ENTITY_VILLAGER_NO
+    volume: 1.0
+    pitch: 0.5
+
+  # Played when you try to harvest but lack a seed to replant
+  denied-seed:
+    enabled: true
+    sound: ENTITY_VILLAGER_NO
+    volume: 1.0
+    pitch: 0.5

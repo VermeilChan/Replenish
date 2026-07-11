@@ -3,8 +3,6 @@ package dev.replenish;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -235,12 +233,7 @@ public class ReplenishListener implements Listener {
                                 .replace("{crop}", cropName)
                                 .replace("{tool}", toolName);
                 player.sendMessage(ColorUtils.color(msg));
-                player.playSound(
-                        player.getLocation(),
-                        Sound.ENTITY_VILLAGER_NO,
-                        SoundCategory.PLAYERS,
-                        1.0f,
-                        1.0f);
+                config.soundDeniedTool.play(player);
             }
             return;
         }
@@ -276,12 +269,7 @@ public class ReplenishListener implements Listener {
                     String msg =
                             config.msgNeedSeed.replace("{count}", "1").replace("{seed}", seedName);
                     player.sendMessage(ColorUtils.color(msg));
-                    player.playSound(
-                            player.getLocation(),
-                            Sound.ENTITY_VILLAGER_NO,
-                            SoundCategory.PLAYERS,
-                            1.0f,
-                            1.0f);
+                    config.soundDeniedSeed.play(player);
                 }
                 return;
             }
@@ -300,7 +288,12 @@ public class ReplenishListener implements Listener {
             Location dropLocation = DropPickupManager.centeredDropLocation(block.getLocation());
             if (config.directPickup) {
                 DropPickupManager.giveToPlayerOrDrop(
-                        player, dropLocation, drops, config.msgInventoryFull);
+                        player,
+                        dropLocation,
+                        drops,
+                        config.msgInventoryFull,
+                        config.soundPickup,
+                        config.soundInventoryFull);
             } else {
                 World world = block.getWorld();
                 for (ItemStack drop : drops) {

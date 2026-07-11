@@ -2,6 +2,7 @@ package dev.replenish;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.ConsoleCommandSender;
@@ -10,6 +11,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -18,7 +20,7 @@ public class ReplenishPlugin extends JavaPlugin {
     private static final int DEFAULT_REPLANT_DELAY_TICKS = 1;
     private static final int DEFAULT_MAX_REPLANTS = 1024;
     private static final int MIN_REPLANTS_PER_TICK = 256;
-    int CONFIG_VERSION = 4;
+    int CONFIG_VERSION = 5;
 
     private static final String PREFIX = "&8[&eReplenish&8] &7";
 
@@ -133,7 +135,11 @@ public class ReplenishPlugin extends JavaPlugin {
                         current.cropEnabled,
                         current.msgInventoryFull,
                         current.msgRequiresTool,
-                        current.msgNeedSeed);
+                        current.msgNeedSeed,
+                        current.soundPickup,
+                        current.soundInventoryFull,
+                        current.soundDeniedTool,
+                        current.soundDeniedSeed);
         configCacheRef.set(newCache);
     }
 
@@ -174,6 +180,11 @@ public class ReplenishPlugin extends JavaPlugin {
         final String msgRequiresTool;
         final String msgNeedSeed;
 
+        final SoundEffect soundPickup;
+        final SoundEffect soundInventoryFull;
+        final SoundEffect soundDeniedTool;
+        final SoundEffect soundDeniedSeed;
+
         private ConfigCache(
                 boolean enabled,
                 boolean requirePlayerSeed,
@@ -183,7 +194,11 @@ public class ReplenishPlugin extends JavaPlugin {
                 Map<Material, Boolean> cropEnabled,
                 String msgInventoryFull,
                 String msgRequiresTool,
-                String msgNeedSeed) {
+                String msgNeedSeed,
+                SoundEffect soundPickup,
+                SoundEffect soundInventoryFull,
+                SoundEffect soundDeniedTool,
+                SoundEffect soundDeniedSeed) {
             this.enabled = enabled;
             this.requirePlayerSeed = requirePlayerSeed;
             this.directPickup = directPickup;
@@ -193,6 +208,10 @@ public class ReplenishPlugin extends JavaPlugin {
             this.msgInventoryFull = msgInventoryFull;
             this.msgRequiresTool = msgRequiresTool;
             this.msgNeedSeed = msgNeedSeed;
+            this.soundPickup = soundPickup;
+            this.soundInventoryFull = soundInventoryFull;
+            this.soundDeniedTool = soundDeniedTool;
+            this.soundDeniedSeed = soundDeniedSeed;
         }
 
         static ConfigCache getDefault() {
@@ -205,7 +224,11 @@ public class ReplenishPlugin extends JavaPlugin {
                     defaultCrops(),
                     "&8[&eReplenish&8] &8» &7Your inventory is full! Items dropped on the ground.",
                     "&8[&eReplenish&8] &8» &e{crop} &7requires &e{tool}&7.",
-                    "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c.");
+                    "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c.",
+                    new SoundEffect(true, Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f),
+                    new SoundEffect(true, Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f),
+                    new SoundEffect(true, Sound.ENTITY_VILLAGER_NO, 1.0f, 0.5f),
+                    new SoundEffect(true, Sound.ENTITY_VILLAGER_NO, 1.0f, 0.5f));
         }
 
         static ConfigCache from(FileConfiguration config, int delayTicks, int maxPerTick) {
@@ -224,7 +247,36 @@ public class ReplenishPlugin extends JavaPlugin {
                             "messages.requires-tool",
                             "&8[&eReplenish&8] &8» &e{crop} &7requires &e{tool}&7."),
                     config.getString(
-                            "messages.need-seed", "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c."));
+                            "messages.need-seed", "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c."),
+                    readSound(config, "pickup", Sound.ENTITY_ITEM_PICKUP, 1.0f),
+                    readSound(config, "inventory-full", Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f),
+                    readSound(config, "denied-tool", Sound.ENTITY_VILLAGER_NO, 0.5f),
+                    readSound(config, "denied-seed", Sound.ENTITY_VILLAGER_NO, 0.5f));
+        }
+
+        private static SoundEffect readSound(
+                FileConfiguration config, String key, Sound defaultSound, float defaultPitch) {
+            String base = "sounds." + key + ".";
+            boolean enabled = config.getBoolean(base + "enabled", true);
+
+            String soundName = config.getString(base + "sound", defaultSound.name());
+            Sound sound = defaultSound;
+            try {
+                sound = Sound.valueOf(soundName.trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ex) {
+                Bukkit.getLogger()
+                        .warning(
+                                "[Replenish] Unknown sound '"
+                                        + soundName
+                                        + "' for sounds."
+                                        + key
+                                        + ".sound - falling back to "
+                                        + defaultSound.name());
+            }
+
+            float volume = (float) config.getDouble(base + "volume", (float) 1.0);
+            float pitch = (float) config.getDouble(base + "pitch", defaultPitch);
+            return new SoundEffect(enabled, sound, volume, pitch);
         }
 
         private static Map<Material, Boolean> readCrops(FileConfiguration config) {

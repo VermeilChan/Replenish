@@ -110,6 +110,17 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                                 + DOT
                                 + "&7Require a seed to replant: "
                                 + (cfg.requirePlayerSeed ? "&aYes" : "&cNo"));
+                send(
+                        sender,
+                        "  "
+                                + DOT
+                                + "&7Sounds: &f"
+                                + countEnabled(
+                                        cfg.soundPickup,
+                                        cfg.soundInventoryFull,
+                                        cfg.soundDeniedTool,
+                                        cfg.soundDeniedSeed)
+                                + "/4 &7enabled");
                 send(sender, "");
                 send(sender, "&7Your config.yml changes are now live.");
                 send(sender, "");
@@ -160,6 +171,13 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                 appendCropLine(sender, Material.NETHER_WART, "Nether Wart");
                 appendCropLine(sender, Material.COCOA, "Cocoa");
                 appendCropLine(sender, Material.BEETROOTS, "Beetroots");
+                send(sender, "");
+
+                send(sender, "&eSounds");
+                appendSoundLine(sender, "Pickup", cfg.soundPickup);
+                appendSoundLine(sender, "Inventory full", cfg.soundInventoryFull);
+                appendSoundLine(sender, "Denied (tool)", cfg.soundDeniedTool);
+                appendSoundLine(sender, "Denied (seed)", cfg.soundDeniedSeed);
                 send(sender, "");
 
                 send(sender, "&7Tip: &8/&7replenish reload &7after editing config.yml.");
@@ -256,6 +274,39 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
     private void appendCropLine(CommandSender sender, Material material, String displayName) {
         boolean on = plugin.isCropEnabled(material);
         send(sender, "  " + (on ? "&a✔" : "&c✖") + " &7" + displayName);
+    }
+
+    private void appendSoundLine(CommandSender sender, String label, SoundEffect sound) {
+        if (sound == null || !sound.enabled()) {
+            send(sender, "  " + DOT + "&7" + label + ": &cDISABLED");
+            return;
+        }
+        String soundName = sound.sound() != null ? sound.sound().name() : "UNKNOWN";
+        send(
+                sender,
+                "  "
+                        + DOT
+                        + "&7"
+                        + label
+                        + ": &a"
+                        + soundName
+                        + " &8(&7vol &f"
+                        + fmt(sound.volume())
+                        + "&8, &7pitch &f"
+                        + fmt(sound.pitch())
+                        + "&8)");
+    }
+
+    private static String fmt(float value) {
+        return String.format(Locale.ROOT, "%.2f", value);
+    }
+
+    private static int countEnabled(SoundEffect... sounds) {
+        int n = 0;
+        for (SoundEffect s : sounds) {
+            if (s != null && s.enabled()) n++;
+        }
+        return n;
     }
 
     @Override

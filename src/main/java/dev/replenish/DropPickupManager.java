@@ -1,8 +1,6 @@
 package dev.replenish;
 
 import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -18,7 +16,9 @@ public final class DropPickupManager {
             Player player,
             Location dropLocation,
             Collection<ItemStack> drops,
-            String inventoryFullMessage) {
+            String inventoryFullMessage,
+            SoundEffect pickupSound,
+            SoundEffect inventoryFullSound) {
         if (player == null
                 || !player.isOnline()
                 || dropLocation == null
@@ -74,21 +74,11 @@ public final class DropPickupManager {
 
         if (anyDropped) {
             player.sendMessage(ColorUtils.color(inventoryFullMessage));
-            player.playSound(
-                    player.getLocation(),
-                    Sound.BLOCK_NOTE_BLOCK_BASS,
-                    SoundCategory.PLAYERS,
-                    1.0f,
-                    0.5f);
+            if (inventoryFullSound != null) inventoryFullSound.play(player);
         }
 
         if (anyAdded) {
-            player.playSound(
-                    player.getLocation(),
-                    Sound.ENTITY_ITEM_PICKUP,
-                    SoundCategory.PLAYERS,
-                    0.25f,
-                    1.2f);
+            if (pickupSound != null) pickupSound.play(player);
         }
     }
 
