@@ -71,13 +71,14 @@ public class ReplenishListener implements Listener {
     public static final Set<Material> AXE_TOOLS = buildAxeTools();
 
     private static Set<Material> buildHoeTools() {
-        Set<Material> set = EnumSet.of(
-                Material.WOODEN_HOE,
-                Material.STONE_HOE,
-                Material.IRON_HOE,
-                Material.GOLDEN_HOE,
-                Material.DIAMOND_HOE,
-                Material.NETHERITE_HOE);
+        Set<Material> set =
+                EnumSet.of(
+                        Material.WOODEN_HOE,
+                        Material.STONE_HOE,
+                        Material.IRON_HOE,
+                        Material.GOLDEN_HOE,
+                        Material.DIAMOND_HOE,
+                        Material.NETHERITE_HOE);
         if (COPPER_HOE != null) {
             set.add(COPPER_HOE);
         }
@@ -85,13 +86,14 @@ public class ReplenishListener implements Listener {
     }
 
     private static Set<Material> buildAxeTools() {
-        Set<Material> set = EnumSet.of(
-                Material.WOODEN_AXE,
-                Material.STONE_AXE,
-                Material.IRON_AXE,
-                Material.GOLDEN_AXE,
-                Material.DIAMOND_AXE,
-                Material.NETHERITE_AXE);
+        Set<Material> set =
+                EnumSet.of(
+                        Material.WOODEN_AXE,
+                        Material.STONE_AXE,
+                        Material.IRON_AXE,
+                        Material.GOLDEN_AXE,
+                        Material.DIAMOND_AXE,
+                        Material.NETHERITE_AXE);
         if (COPPER_AXE != null) {
             set.add(COPPER_AXE);
         }
