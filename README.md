@@ -68,7 +68,7 @@ enabled: true
 requirePlayerSeed: true
 directPickup: true
 replantDelayTicks: 1
-maxReplantsPerTick: 4096
+maxReplantsPerTick: 1024
 checkUpdates: true
 crops:
   wheat: true
@@ -78,3 +78,12 @@ crops:
   cocoa: true
   beetroots: true
 ```
+
+## 💡 Contributions & Pull Requests
+
+Managing direct PRs gets a bit overwhelming for me, so I keep them disabled for this project to protect my peace. But I'm open to discussion! If you have a features, optimizations, bug fixes, improvements etc., open an issue first. We can chat about it there and see if it fits the project.
+Otherwise, you are highly encouraged to fork or clone this repo and do whatever you want with it. Vibe-code, rip it apart, and build what you want not what other people expect you to build.
+Everyone starts somewhere, and you are goated. You matter, so go start now.
+
+## License
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
