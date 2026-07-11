@@ -45,8 +45,6 @@ body:
         - "Nether Wart"
         - "Cocoa Beans"
         - "Beetroots"
-        - "Torchflower"
-        - "Pitcher Crop"
         - "Multiple / All Crops"
     validations:
       required: true
@@ -82,6 +80,7 @@ body:
         - "Spigot"
         - "PaperMC"
         - "Purpur"
+        - "Leaf"
         - "Pufferfish"
         - "Other (Please mention in Additional Context)"
     validations:
@@ -92,7 +91,7 @@ body:
     attributes:
       label: "Minecraft Version"
       description: "Run the `/version` or `/about` command in your server console and paste the exact output here."
-      placeholder: "ex. This server is running Paper version 26.2-34-2960379 (MC: 26.2)"
+      placeholder: "ex. This server is running Paper version 26.2-2607-HEAD@fc3c961 (MC: 26.2)"
     validations:
       required: true
 
@@ -145,7 +144,7 @@ body:
       label: "Other Plugins"
       description: |
         Does your server have any other plugins that might mess with farming, block breaking, or inventory? (Like mcMMO, anti-cheats, Essentials, etc.)
-        Listing them helps me rule out conflicts!
+        Listing them helps rule out conflicts. Note: Conflicts between plugins will not be fixed, and the issue will be closed.
       placeholder: "ex. EssentialsX, mcMMO, NoCheatPlus, Aurelium Skills..."
     validations:
       required: false
