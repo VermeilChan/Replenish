@@ -96,7 +96,7 @@ public final class SeedIndex {
             }
         }
         ItemStack offhand = inventory.getItem(EquipmentSlot.OFF_HAND);
-        if (offhand != null && !offhand.getType().isAir() && offhand.getAmount() > 0) {
+        if (!offhand.getType().isAir() && offhand.getAmount() > 0) {
             index.putIfAbsent(offhand.getType(), OFFHAND_SLOT);
         }
         return index;
@@ -108,7 +108,7 @@ public final class SeedIndex {
             if (stack != null && stack.getType() == material && stack.getAmount() > 0) return i;
         }
         ItemStack offhand = inventory.getItem(EquipmentSlot.OFF_HAND);
-        if (offhand != null && offhand.getType() == material && offhand.getAmount() > 0) {
+        if (offhand.getType() == material && offhand.getAmount() > 0) {
             return OFFHAND_SLOT;
         }
         return NO_SLOT;
