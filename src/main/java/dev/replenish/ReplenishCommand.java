@@ -57,6 +57,9 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
                             + plugin.getDescription().getVersion()
                             + " &8]&m      &r");
             send(sender, "");
+            send(
+                    sender,
+                    "&e/replenish help &8- &7Shows a detailed guide on how to use the plugin.");
             send(sender, "&e/replenish status &8- &7Shows current settings and enabled crops.");
             send(sender, "&e/replenish reload &8- &7Reloads config.yml without restarting.");
             send(sender, "&e/replenish toggle &8- &7Turns replanting on or off for everyone.");
@@ -68,6 +71,59 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
 
         String sub = args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
+            case "help" -> {
+                if (isDenied(sender, "replenish.use")) return true;
+
+                send(sender, "");
+                send(sender, "&8&m      &8[ &e&lReplenish &7Help Guide &8]&m      &r");
+                send(sender, "");
+                send(sender, "&eHow it works:");
+                send(
+                        sender,
+                        "  " + DOT + "&7Use a &fHoe &7for normal crops, or an &fAxe &7for Cocoa.");
+                send(sender, "  " + DOT + "&7Break the crop, and it will auto-replant instantly.");
+                send(
+                        sender,
+                        "  "
+                                + DOT
+                                + "&7If seeds are required, 1 seed is taken from your inventory.");
+                send(sender, "");
+                send(sender, "&e&lPro Tip:");
+                send(
+                        sender,
+                        "  "
+                                + DOT
+                                + "&7It is best to have at least &f4x &7of the seed of the crop"
+                                + " to");
+                send(sender, "    &7avoid replanting it too fast and running out, making it think");
+                send(sender, "    &7you don't have enough seeds!");
+                send(sender, "");
+                send(sender, "&eCommands:");
+                send(
+                        sender,
+                        "  "
+                                + DOT
+                                + "&f/replenish status &8- &7Shows current settings and enabled"
+                                + " crops.");
+                send(
+                        sender,
+                        "  "
+                                + DOT
+                                + "&f/replenish reload &8- &7Reloads config.yml without"
+                                + " restarting.");
+                send(
+                        sender,
+                        "  "
+                                + DOT
+                                + "&f/replenish toggle &8- &7Turns replanting on or off for"
+                                + " everyone.");
+                send(
+                        sender,
+                        "  " + DOT + "&f/replenish version &8- &7Shows version and update info.");
+                send(sender, "");
+                send(sender, LINE);
+                return true;
+            }
             case "toggle" -> {
                 if (isDenied(sender, "replenish.toggle")) return true;
 
@@ -314,8 +370,11 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
             CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
-            List<String> allowed = new ArrayList<>(4);
+            List<String> allowed = new ArrayList<>(5);
 
+            if (sender.hasPermission("replenish.use") && "help".startsWith(prefix)) {
+                allowed.add("help");
+            }
             if (sender.hasPermission("replenish.status") && "status".startsWith(prefix)) {
                 allowed.add("status");
             }
