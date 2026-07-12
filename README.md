@@ -1,6 +1,6 @@
 # Replenish 🌾
 
-Tiny, blazing-fast auto-replant plugin for Spigot/Paper, inspired by Hypixel's Replenish enchantment.
+Tiny, blazing-fast auto-replant QoL plugin for Spigot/Paper, inspired by Hypixel's Replenish mechanic.
 
 ![Preview](assets/output.webp)
 
@@ -15,7 +15,8 @@ Tiny, blazing-fast auto-replant plugin for Spigot/Paper, inspired by Hypixel's R
 - 🪓 Requires the correct tool (Hoes / Axes)
 - 🧭 Correctly replants Cocoa with the proper facing
 - 🍀 Fortune enchantments works normally
-- ⚡ Extremely lightweight and designed for large farms
+- ⚡ Designed for high-performance and large farms
+- 🔊 Fully configurable sounds
 
 ---
 
@@ -61,7 +62,9 @@ Permissions:
 
 ---
 
-## Config
+## Configuration
+
+### Common settings
 
 ```yaml
 enabled: true
@@ -70,6 +73,37 @@ directPickup: true
 replantDelayTicks: 1
 maxReplantsPerTick: 1024
 checkUpdates: true
+```
+
+<details>
+<summary>Full default config.yml</summary>
+
+```yaml
+# ============================================
+#         REPLENISH CONFIG
+# ============================================
+
+# --------------------------
+# GENERAL SETTINGS
+# --------------------------
+
+config-version: 5              # DON'T TOUCH THIS!!!
+
+enabled: true                  # master switch: false disables all replanting globally
+requirePlayerSeed: true        # consume 1 seed from inventory on mature harvest
+directPickup: true             # drops go straight to the player
+replantDelayTicks: 1           # 1 tick = 50ms
+
+maxReplantsPerTick: 1024      # maximum crops replanted per tick (20 ticks/second)
+        # raise this on beefier servers if replants lag behind
+# lower it on weaker servers to reduce load
+
+checkUpdates: true             # check GitHub for new releases on server startup
+
+# --------------------------
+# CROP TOGGLES (turn on/off)
+# --------------------------
+
 crops:
   wheat: true
   carrots: true
@@ -77,7 +111,62 @@ crops:
   nether_wart: true
   cocoa: true
   beetroots: true
+
+# --------------------------
+# CHAT MESSAGES (customize these)
+# --------------------------
+# Placeholders: {crop}, {tool}, {seed}, {count}
+
+messages:
+  inventory-full: "&8[&eReplenish&8] &8» &7Your inventory was full, so some items dropped on the ground instead."
+  requires-tool: "&8[&eReplenish&8] &8» &7You need a &e{tool} &7to harvest &e{crop}&7."
+  need-seed: "&8[&eReplenish&8] &8» &7You need &e{count}x {seed} &7in your inventory to replant this."
+
+# --------------------------
+# SOUND EFFECTS (customize or disable)
+# --------------------------
+# Each of the four feedback sounds can be individually enabled/disabled
+# and customized with any Bukkit Sound, volume, and pitch.
+#
+# sound:  Must match a Bukkit Sound enum name (case-insensitive).
+#         Full list: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+#         Invalid names log a warning and fall back to the default.
+# volume: 0.0 (silent) to 1.0 (loudest)
+# pitch:  0.5 (low) to 2.0 (high); 1.0 = normal
+#
+# To disable a sound entirely, set enabled: false.
+
+sounds:
+  # Played when harvested crops go into your inventory
+  pickup:
+    enabled: true
+    sound: ENTITY_ITEM_PICKUP
+    volume: 1.0
+    pitch: 1.0
+
+  # Played when your inventory is full and items drop on the ground
+  inventory-full:
+    enabled: true
+    sound: BLOCK_NOTE_BLOCK_BASS
+    volume: 1.0
+    pitch: 0.5
+
+  # Played when you try to harvest without the required tool
+  denied-tool:
+    enabled: true
+    sound: ENTITY_VILLAGER_NO
+    volume: 1.0
+    pitch: 0.5
+
+  # Played when you try to harvest but lack a seed to replant
+  denied-seed:
+    enabled: true
+    sound: ENTITY_VILLAGER_NO
+    volume: 1.0
+    pitch: 0.5
 ```
+
+</details>
 
 ## 💡 Contributions & Pull Requests
 
