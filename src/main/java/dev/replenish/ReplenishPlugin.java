@@ -81,9 +81,13 @@ public class ReplenishPlugin extends JavaPlugin {
         FileConfiguration config = getConfig();
 
         boolean regenerated = false;
-        if (!config.contains("config-version")
-                || config.getInt("config-version", 1) < CONFIG_VERSION) {
-            sendConsole("&eConfig version mismatch. Generating missing values...");
+        int oldVersion = config.getInt("config-version", 1);
+        if (!config.contains("config-version") || oldVersion < CONFIG_VERSION) {
+            sendConsole("&eYour config file is outdated (v" + oldVersion + ").");
+            sendConsole(
+                    "&eUpdating to &fv" + CONFIG_VERSION + "&e and adding new default options...");
+            sendConsole("&7(Don't worry, your existing custom settings are safe!)");
+
             config.options().copyDefaults(true);
             config.set("config-version", CONFIG_VERSION);
             regenerated = true;
@@ -115,7 +119,7 @@ public class ReplenishPlugin extends JavaPlugin {
 
         if (regenerated) {
             saveConfig();
-            sendConsole("Config updated.");
+            sendConsole("&aConfig successfully updated and saved!");
         }
     }
 

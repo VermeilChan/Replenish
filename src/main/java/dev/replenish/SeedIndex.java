@@ -9,7 +9,6 @@ import org.bukkit.inventory.PlayerInventory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class SeedIndex {
 
@@ -17,8 +16,7 @@ public final class SeedIndex {
     private static final int OFFHAND_SLOT = -2;
     private static final int STORAGE_SIZE = 36;
 
-    private static final Map<UUID, Map<Material, Integer>> cacheByPlayer =
-            new ConcurrentHashMap<>();
+    private static final Map<UUID, Map<Material, Integer>> cacheByPlayer = new HashMap<>();
 
     private SeedIndex() {}
 
@@ -42,8 +40,15 @@ public final class SeedIndex {
                 cacheByPlayer.computeIfAbsent(uuid, k -> buildIndex(inventory));
 
         Integer cachedSlot = playerCache.get(seedMaterial);
-        if (cachedSlot != null && cachedSlot != NO_SLOT) {
-            if (tryConsume(inventory, playerCache, seedMaterial, cachedSlot)) return true;
+
+        if (cachedSlot != null) {
+            if (cachedSlot == NO_SLOT) {
+                return false;
+            }
+
+            if (tryConsume(inventory, playerCache, seedMaterial, cachedSlot)) {
+                return true;
+            }
         }
 
         playerCache.clear();
