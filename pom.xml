@@ -6,87 +6,52 @@
 
     <groupId>dev</groupId>
     <artifactId>Replenish</artifactId>
-    <version>6.1.0</version>
+    <version>7.0.0</version>
     <packaging>jar</packaging>
 
     <name>Replenish</name>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <build>
-        <defaultGoal>clean package</defaultGoal>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.15.0</version>
                 <configuration>
-                    <release>17</release>
-                    <compilerArgs>
-                        <arg>-g:none</arg>
-                    </compilerArgs>
-                    <parameters>false</parameters>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.5.0</version>
-                <configuration>
-                    <archive>
-                        <addMavenDescriptor>false</addMavenDescriptor>
-                    </archive>
-                    <excludes>
-                        <exclude>**/*.MD</exclude>
-                        <exclude>**/*.md</exclude>
-                        <exclude>**/README*</exclude>
-                        <exclude>**/docs/**</exclude>
-                        <exclude>**/.keep</exclude>
-                        <exclude>**/*.kotlin_metadata</exclude>
-                        <exclude>**/LICENSE*</exclude>
-                        <exclude>**/NOTICE*</exclude>
-                    </excludes>
+                    <source>21</source>
+                    <target>21</target>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.6.2</version>
-                <configuration>
-                    <minimizeJar>true</minimizeJar>
-                    <shadedArtifactAttached>false</shadedArtifactAttached>
-                    <filters>
-                        <filter>
-                            <artifact>*:*</artifact>
-                            <excludes>
-                                <exclude>META-INF/*.SF</exclude>
-                                <exclude>META-INF/*.DSA</exclude>
-                                <exclude>META-INF/*.RSA</exclude>
-                            </excludes>
-                        </filter>
-                    </filters>
-                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.11.0</version>
-                <executions>
-                    <execution>
-                        <id>analyze</id>
-                        <phase>verify</phase>
-                        <goals><goal>analyze</goal></goals>
+                        <configuration>
+                            <minimizeJar>true</minimizeJar>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>**/LICENSE*</exclude>
+                                        <exclude>**/NOTICE*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -94,22 +59,23 @@
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
-                <filtering>true</filtering> </resource>
+                <filtering>true</filtering>
+            </resource>
         </resources>
     </build>
 
     <repositories>
         <repository>
-            <id>spigotmc-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <id>papermc-repo</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
     </repositories>
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>1.17.1-R0.1-SNAPSHOT</version>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>[1.20.6.build,)</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
