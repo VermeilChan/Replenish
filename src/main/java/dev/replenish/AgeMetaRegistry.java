@@ -57,7 +57,7 @@ public final class AgeMetaRegistry {
 
     public static final class CocoaFaces {
         public static final BlockFace[] FACES = {
-            BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
+                BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
         };
     }
 
@@ -66,12 +66,12 @@ public final class AgeMetaRegistry {
     public AgeMetaRegistry(Plugin plugin) {
         this.metadataMap = new EnumMap<>(Material.class);
         Material[] supportedCrops = {
-            Material.WHEAT,
-            Material.CARROTS,
-            Material.POTATOES,
-            Material.NETHER_WART,
-            Material.COCOA,
-            Material.BEETROOTS
+                Material.WHEAT,
+                Material.CARROTS,
+                Material.POTATOES,
+                Material.NETHER_WART,
+                Material.COCOA,
+                Material.BEETROOTS
         };
 
         for (Material material : supportedCrops) {
@@ -107,20 +107,18 @@ public final class AgeMetaRegistry {
                     }
                 }
 
-                CropInfo info =
-                        new CropInfo(
-                                maxAge,
-                                ageStates != null ? ageStates[0] : ageFacingStates[0][0],
-                                requiresFarmland,
-                                requiresSoulSand,
-                                isCocoa,
-                                ageStates,
-                                ageFacingStates);
+                CropInfo info = new CropInfo(
+                        maxAge,
+                        ageStates != null ? ageStates[0] : ageFacingStates[0][0],
+                        requiresFarmland,
+                        requiresSoulSand,
+                        isCocoa,
+                        ageStates,
+                        ageFacingStates);
                 metadataMap.put(material, info);
 
             } catch (Throwable error) {
-                plugin.getLogger()
-                        .log(Level.WARNING, "Age meta scan skipped for " + material, error);
+                plugin.getLogger().log(Level.WARNING, "Age meta scan skipped for " + material, error);
             }
         }
     }

@@ -29,15 +29,13 @@ public final class SeedIndex {
     }
 
     public static boolean consume(Player player, Material seedMaterial) {
-        if (player == null
-                || seedMaterial == null
-                || seedMaterial.isAir()
-                || !seedMaterial.isItem()) return false;
+        if (player == null || seedMaterial == null || seedMaterial.isAir() || !seedMaterial.isItem()) {
+            return false;
+        }
 
         PlayerInventory inventory = player.getInventory();
         UUID uuid = player.getUniqueId();
-        Map<Material, Integer> playerCache =
-                cacheByPlayer.computeIfAbsent(uuid, k -> buildIndex(inventory));
+        Map<Material, Integer> playerCache = cacheByPlayer.computeIfAbsent(uuid, k -> buildIndex(inventory));
 
         Integer cachedSlot = playerCache.get(seedMaterial);
 
@@ -45,7 +43,6 @@ public final class SeedIndex {
             if (cachedSlot == NO_SLOT) {
                 return false;
             }
-
             if (tryConsume(inventory, playerCache, seedMaterial, cachedSlot)) {
                 return true;
             }
@@ -65,10 +62,9 @@ public final class SeedIndex {
 
     private static boolean tryConsume(
             PlayerInventory inventory, Map<Material, Integer> cache, Material material, int slot) {
-        ItemStack stack =
-                (slot == OFFHAND_SLOT)
-                        ? inventory.getItem(EquipmentSlot.OFF_HAND)
-                        : inventory.getItem(slot);
+        ItemStack stack = (slot == OFFHAND_SLOT)
+                ? inventory.getItem(EquipmentSlot.OFF_HAND)
+                : inventory.getItem(slot);
 
         if (stack == null || stack.getType() != material || stack.getAmount() <= 0) {
             return false;
@@ -100,10 +96,12 @@ public final class SeedIndex {
                 index.putIfAbsent(stack.getType(), i);
             }
         }
+
         ItemStack offhand = inventory.getItem(EquipmentSlot.OFF_HAND);
         if (!offhand.getType().isAir() && offhand.getAmount() > 0) {
             index.putIfAbsent(offhand.getType(), OFFHAND_SLOT);
         }
+
         return index;
     }
 
@@ -112,10 +110,12 @@ public final class SeedIndex {
             ItemStack stack = inventory.getItem(i);
             if (stack != null && stack.getType() == material && stack.getAmount() > 0) return i;
         }
+
         ItemStack offhand = inventory.getItem(EquipmentSlot.OFF_HAND);
         if (offhand.getType() == material && offhand.getAmount() > 0) {
             return OFFHAND_SLOT;
         }
+
         return NO_SLOT;
     }
 }

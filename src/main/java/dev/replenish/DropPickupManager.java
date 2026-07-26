@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Map;
 
 public final class DropPickupManager {
+
     private DropPickupManager() {}
 
     public static void giveToPlayerOrDrop(
@@ -19,11 +20,9 @@ public final class DropPickupManager {
             String inventoryFullMessage,
             SoundEffect pickupSound,
             SoundEffect inventoryFullSound) {
-        if (player == null
-                || !player.isOnline()
-                || dropLocation == null
-                || drops == null
-                || drops.isEmpty()) return;
+        if (player == null || !player.isOnline() || dropLocation == null || drops == null || drops.isEmpty()) {
+            return;
+        }
 
         PlayerInventory inventory = player.getInventory();
         World world = dropLocation.getWorld();
@@ -48,9 +47,7 @@ public final class DropPickupManager {
                         if (leftover != null && leftover.getAmount() > 0) {
                             leftoverAmount += leftover.getAmount();
                             if (world != null
-                                    && world.isChunkLoaded(
-                                            dropLocation.getBlockX() >> 4,
-                                            dropLocation.getBlockZ() >> 4)) {
+                                    && world.isChunkLoaded(dropLocation.getBlockX() >> 4, dropLocation.getBlockZ() >> 4)) {
                                 world.dropItemNaturally(dropLocation, leftover);
                             } else if (fallbackWorld != null) {
                                 fallbackWorld.dropItemNaturally(fallbackLoc, leftover);
@@ -62,8 +59,7 @@ public final class DropPickupManager {
                 }
             } catch (Exception e) {
                 if (world != null
-                        && world.isChunkLoaded(
-                                dropLocation.getBlockX() >> 4, dropLocation.getBlockZ() >> 4)) {
+                        && world.isChunkLoaded(dropLocation.getBlockX() >> 4, dropLocation.getBlockZ() >> 4)) {
                     world.dropItemNaturally(dropLocation, stack);
                 } else if (fallbackWorld != null) {
                     fallbackWorld.dropItemNaturally(fallbackLoc, stack);
@@ -84,14 +80,11 @@ public final class DropPickupManager {
 
     public static Location centeredDropLocation(Location target) {
         if (target == null) return null;
+
         World world = target.getWorld();
         if (world == null) return null;
+
         return new Location(
-                world,
-                target.getBlockX() + 0.5,
-                target.getBlockY() + 0.5,
-                target.getBlockZ() + 0.5,
-                0f,
-                0f);
+                world, target.getBlockX() + 0.5, target.getBlockY() + 0.5, target.getBlockZ() + 0.5, 0f, 0f);
     }
 }

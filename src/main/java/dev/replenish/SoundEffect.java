@@ -26,8 +26,10 @@ public record SoundEffect(boolean enabled, Sound sound, float volume, float pitc
 
     public void play(Player player) {
         if (!enabled || sound == null || player == null || !player.isOnline()) return;
+
         Location loc = player.getLocation();
         if (loc.getWorld() == null) return;
+
         player.playSound(loc, sound, SoundCategory.PLAYERS, volume, pitch);
     }
 

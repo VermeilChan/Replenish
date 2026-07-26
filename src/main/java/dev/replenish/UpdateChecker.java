@@ -13,17 +13,18 @@ import java.util.regex.Pattern;
 
 public final class UpdateChecker {
 
-    private static final String API_URL =
-            "https://api.github.com/repos/Mitra-88/Replenish/releases/latest";
-    private static final String RELEASES_URL =
-            "https://github.com/Mitra-88/Replenish/releases/latest";
+    private static final String API_URL = "https://api.github.com/repos/Mitra-88/Replenish/releases/latest";
+    private static final String RELEASES_URL = "https://github.com/Mitra-88/Replenish/releases/latest";
 
     private static final Pattern TAG_PATTERN = Pattern.compile("\"tag_name\"\\s*:\\s*\"([^\"]+)\"");
 
-    private static final HttpClient HTTP_CLIENT =
-            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(4)).build();
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(4))
+            .build();
 
     private static final String PREFIX = "&8[&eReplenish&8] &8» &7";
+    private static final String USER_AGENT =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36";
 
     private final String currentVersion;
     private final boolean enabled;
@@ -40,77 +41,53 @@ public final class UpdateChecker {
     public void check() {
         if (!enabled) return;
 
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(API_URL))
-                        .timeout(Duration.ofSeconds(4))
-                        .header(
-                                "User-Agent",
-                                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                                        + " (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36")
-                        .header("Accept", "application/vnd.github+json")
-                        .GET()
-                        .build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(API_URL))
+                .timeout(Duration.ofSeconds(4))
+                .header("User-Agent", USER_AGENT)
+                .header("Accept", "application/vnd.github+json")
+                .GET()
+                .build();
 
-        HTTP_CLIENT
-                .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenAccept(
-                        response -> {
-                            if (response.statusCode() == 403) {
-                                console(PREFIX + "&cUpdate check failed: GitHub API rate-limited.");
-                                return;
-                            }
-                            if (response.statusCode() == 404) {
-                                console(
-                                        PREFIX
-                                                + "&cUpdate check failed: No releases found on"
-                                                + " GitHub.");
-                                return;
-                            }
-                            if (response.statusCode() != 200) {
-                                console(
-                                        PREFIX
-                                                + "&cUpdate check failed: HTTP "
-                                                + response.statusCode());
-                                return;
-                            }
+        HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenAccept(this::handleResponse)
+                .exceptionally(e -> {
+                    console(PREFIX + "&cUpdate check failed: " + e.getMessage());
+                    return null;
+                });
+    }
 
-                            Matcher matcher = TAG_PATTERN.matcher(response.body());
-                            if (matcher.find()) {
-                                latestVersion = normalize(matcher.group(1));
-                                updateAvailable = isNewer(currentVersion, latestVersion);
-                                checkCompleted = true;
-                                logResult();
-                            } else {
-                                console(
-                                        PREFIX
-                                                + "&cUpdate check failed: Malformed GitHub"
-                                                + " response.");
-                            }
-                        })
-                .exceptionally(
-                        e -> {
-                            console(PREFIX + "&cUpdate check failed: " + e.getMessage());
-                            return null;
-                        });
+    private void handleResponse(HttpResponse<String> response) {
+        if (response.statusCode() == 403) {
+            console(PREFIX + "&cUpdate check failed: GitHub API rate-limited.");
+            return;
+        }
+        if (response.statusCode() == 404) {
+            console(PREFIX + "&cUpdate check failed: No releases found on GitHub.");
+            return;
+        }
+        if (response.statusCode() != 200) {
+            console(PREFIX + "&cUpdate check failed: HTTP " + response.statusCode());
+            return;
+        }
+
+        Matcher matcher = TAG_PATTERN.matcher(response.body());
+        if (matcher.find()) {
+            latestVersion = normalize(matcher.group(1));
+            updateAvailable = isNewer(currentVersion, latestVersion);
+            checkCompleted = true;
+            logResult();
+        } else {
+            console(PREFIX + "&cUpdate check failed: Malformed GitHub response.");
+        }
     }
 
     private void logResult() {
         if (updateAvailable) {
-            console(
-                    PREFIX
-                            + "&7Update available: &e"
-                            + latestVersion
-                            + " &7(you're on &f"
-                            + currentVersion
-                            + "&7).");
+            console(PREFIX + "&7Update available: &e" + latestVersion + " &7(you're on &f" + currentVersion + "&7).");
             console(PREFIX + "&7Download: &b" + RELEASES_URL);
         } else if (isLocalNewer(currentVersion, latestVersion)) {
-            console(
-                    PREFIX
-                            + "&7Update Status: &dRunning unreleased/dev build &8(&f"
-                            + currentVersion
-                            + "&8)");
+            console(PREFIX + "&7Update Status: &dRunning unreleased/dev build &8(&f" + currentVersion + "&8)");
         } else {
             console(PREFIX + "&7Update Status: &aUp to date &8(&f" + currentVersion + "&8)");
         }

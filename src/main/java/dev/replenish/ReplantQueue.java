@@ -25,18 +25,18 @@ public final class ReplantQueue {
     private static final int RETRY_MASK = 0xFF;
     private static final int MAX_UNLOAD_RETRIES = 20;
 
-    private Block[] poolBlocks;
-    private Material[] poolMaterials;
-    private int[] poolMeta;
-    private int[] poolNext;
-
     private final int[] wheelHeads = new int[TIME_WHEEL_SIZE];
-    private int freeHead = -1;
 
     private final Plugin plugin;
     private final AgeMetaRegistry ageMetaRegistry;
     private final int maxPerTick;
 
+    private Block[] poolBlocks;
+    private Material[] poolMaterials;
+    private int[] poolMeta;
+    private int[] poolNext;
+
+    private int freeHead = -1;
     private int cursor = 0;
     private int taskId = -1;
     private volatile boolean started = false;
@@ -87,11 +87,7 @@ public final class ReplantQueue {
     }
 
     public synchronized void enqueue(
-            Block block,
-            Material plantMaterial,
-            int delayTicks,
-            int targetAge,
-            BlockFace cocoaFacingDirection) {
+            Block block, Material plantMaterial, int delayTicks, int targetAge, BlockFace cocoaFacingDirection) {
         int delay = Math.max(1, delayTicks);
         if (delay >= TIME_WHEEL_SIZE) {
             WarningThrottle.log(
@@ -101,6 +97,7 @@ public final class ReplantQueue {
                     "Replant delay truncation triggered for block at " + locString(block));
             delay = TIME_WHEEL_SIZE - 1;
         }
+
         int slot = (cursor + delay) & TIME_WHEEL_MASK;
         int index = acquire();
 
@@ -169,9 +166,7 @@ public final class ReplantQueue {
                                     plugin,
                                     Level.WARNING,
                                     WarningThrottle.CAT_AGE_DATA_MISSING,
-                                    "No age data found for plant: "
-                                            + plant
-                                            + ", skipping replant at "
+                                    "No age data found for plant: " + plant + ", skipping replant at "
                                             + locString(b));
                         } else if (info.isCocoa) {
                             replantCocoa(head, info);
@@ -195,15 +190,11 @@ public final class ReplantQueue {
                             plugin,
                             Level.WARNING,
                             WarningThrottle.CAT_ABANDONED,
-                            "Abandoning replant at "
-                                    + locString(b)
-                                    + " - chunk remained unloaded.");
+                            "Abandoning replant at " + locString(b) + " - chunk remained unloaded.");
                     release(head);
                     processed++;
                 } else {
-                    poolMeta[head] =
-                            (poolMeta[head] & ~(RETRY_MASK << RETRY_SHIFT))
-                                    | ((retries + 1) << RETRY_SHIFT);
+                    poolMeta[head] = (poolMeta[head] & ~(RETRY_MASK << RETRY_SHIFT)) | ((retries + 1) << RETRY_SHIFT);
                     if (deferredHead == -1) deferredHead = head;
                     else poolNext[deferredTail] = head;
                     deferredTail = head;

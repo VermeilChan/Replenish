@@ -6,6 +6,7 @@ import org.bukkit.command.*;
 import java.util.*;
 
 public class ReplenishCommand implements CommandExecutor, TabCompleter {
+
     private final ReplenishPlugin plugin;
 
     private static final String PREFIX = "&8[&eReplenish&8] &7";
@@ -26,22 +27,12 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
     }
 
     private static String usage(String base) {
-        return PREFIX
-                + ARROW
-                + "&cUnknown subcommand. &7Use &f/"
-                + base
-                + " &7for a list of commands.";
+        return PREFIX + ARROW + "&cUnknown subcommand. &7Use &f/" + base + " &7for a list of commands.";
     }
 
     private boolean isDenied(CommandSender sender, String perm) {
         if (!sender.hasPermission(perm)) {
-            send(
-                    sender,
-                    PREFIX
-                            + ARROW
-                            + "&cYou don't have permission to do that. &8(&7requires "
-                            + perm
-                            + "&8)");
+            send(sender, PREFIX + ARROW + "&cYou don't have permission to do that. &8(&7requires " + perm + "&8)");
             return true;
         }
         return false;
@@ -50,281 +41,174 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            send(sender, "");
-            send(
-                    sender,
-                    "&8&m      &8[ &e&lReplenish &7v"
-                            + plugin.getDescription().getVersion()
-                            + " &8]&m      &r");
-            send(sender, "");
-            send(
-                    sender,
-                    "&e/replenish help &8- &7Shows a detailed guide on how to use the plugin.");
-            send(sender, "&e/replenish status &8- &7Shows current settings and enabled crops.");
-            send(sender, "&e/replenish reload &8- &7Reloads config.yml without restarting.");
-            send(sender, "&e/replenish toggle &8- &7Turns replanting on or off for everyone.");
-            send(sender, "&e/replenish version &8- &7Shows version and update info.");
-            send(sender, "");
-            send(sender, LINE);
+            sendMainMenu(sender);
             return true;
         }
 
         String sub = args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
-            case "help" -> {
-                if (isDenied(sender, "replenish.use")) return true;
-
-                send(sender, "");
-                send(sender, "&8&m      &8[ &e&lReplenish &7Help Guide &8]&m      &r");
-                send(sender, "");
-                send(sender, "&eHow it works:");
-                send(
-                        sender,
-                        "  " + DOT + "&7Use a &fHoe &7for normal crops, or an &fAxe &7for Cocoa.");
-                send(sender, "  " + DOT + "&7Break the crop, and it will auto-replant instantly.");
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&7If seeds are required, 1 seed is taken from your inventory.");
-                send(sender, "");
-                send(sender, "&e&lPro Tip:");
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&7It is best to have at least &f4x &7of the seed of the crop"
-                                + " to");
-                send(sender, "    &7avoid replanting it too fast and running out, making it think");
-                send(sender, "    &7you don't have enough seeds!");
-                send(sender, "");
-                send(sender, "&eCommands:");
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&f/replenish status &8- &7Shows current settings and enabled"
-                                + " crops.");
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&f/replenish reload &8- &7Reloads config.yml without"
-                                + " restarting.");
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&f/replenish toggle &8- &7Turns replanting on or off for"
-                                + " everyone.");
-                send(
-                        sender,
-                        "  " + DOT + "&f/replenish version &8- &7Shows version and update info.");
-                send(sender, "");
-                send(sender, LINE);
-                return true;
-            }
-            case "toggle" -> {
-                if (isDenied(sender, "replenish.toggle")) return true;
-
-                boolean nowEnabled = !plugin.isEnabledGlobally();
-                plugin.getConfig().set("enabled", nowEnabled);
-                plugin.saveConfig();
-
-                plugin.setGloballyEnabled(nowEnabled);
-
-                String state = nowEnabled ? "&a&lENABLED" : "&c&lDISABLED";
-                String detail =
-                        nowEnabled
-                                ? "Crops will replant themselves again."
-                                : "Crops will no longer replant. Harvests behave like vanilla.";
-                sendPrefixed(sender, "Replenish is now " + state + "&7. " + detail);
-                return true;
-            }
-            case "reload" -> {
-                if (isDenied(sender, "replenish.reload")) return true;
-
-                plugin.reloadLocalConfig();
-                var cfg = plugin.getConfigCache();
-
-                send(sender, "");
-                send(sender, "&8&m      &8[ &e&lConfig Reloaded &8]&m      &r");
-                send(sender, "");
-                send(sender, "  " + DOT + "&7Replanting: " + (cfg.enabled ? "&aOn" : "&cOff"));
-                send(
-                        sender,
-                        "  " + DOT + "&7Replant delay: &f" + cfg.replantDelayTicks + " tick(s)");
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&7Give drops directly to player: "
-                                + (cfg.directPickup ? "&aYes" : "&cNo, drop on ground"));
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&7Require a seed to replant: "
-                                + (cfg.requirePlayerSeed ? "&aYes" : "&cNo"));
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&7Sounds: &f"
-                                + countEnabled(
-                                        cfg.soundPickup,
-                                        cfg.soundInventoryFull,
-                                        cfg.soundDeniedTool,
-                                        cfg.soundDeniedSeed)
-                                + "/4 &7enabled");
-                send(sender, "");
-                send(sender, "&7Your config.yml changes are now live.");
-                send(sender, "");
-                send(sender, LINE);
-                return true;
-            }
-            case "status" -> {
-                if (isDenied(sender, "replenish.status")) return true;
-
-                var cfg = plugin.getConfigCache();
-                String version = plugin.getDescription().getVersion();
-
-                send(sender, "");
-                send(sender, "&8&m      &8[ &e&lReplenish &7v" + version + " &8]&m      &r");
-                send(sender, "");
-
-                send(
-                        sender,
-                        (cfg.enabled
-                                ? "&a✔ &fReplanting is active"
-                                : "&c✘ &fReplanting is disabled"));
-                send(
-                        sender,
-                        (cfg.requirePlayerSeed
-                                ? "&a✔ &fPlayers must have a spare seed to replant"
-                                : "&c✘ &fNo seed needed to replant"));
-                send(
-                        sender,
-                        (cfg.directPickup
-                                ? "&a✔ &fHarvested crops go straight to inventory"
-                                : "&c✘ &fHarvested crops drop on the ground"));
-                send(sender, "");
-
-                send(sender, "&eTiming");
-                send(
-                        sender,
-                        "  " + DOT + "&7Replants after: &f" + cfg.replantDelayTicks + " tick(s)");
-                send(
-                        sender,
-                        "  " + DOT + "&7Replant limit: &f" + cfg.maxReplantsPerTick + " per tick");
-                send(sender, "");
-
-                send(sender, "&eCrops that auto-replant");
-                send(sender, "");
-                appendCropLine(sender, Material.WHEAT, "Wheat");
-                appendCropLine(sender, Material.CARROTS, "Carrots");
-                appendCropLine(sender, Material.POTATOES, "Potatoes");
-                appendCropLine(sender, Material.NETHER_WART, "Nether Wart");
-                appendCropLine(sender, Material.COCOA, "Cocoa");
-                appendCropLine(sender, Material.BEETROOTS, "Beetroots");
-                send(sender, "");
-
-                send(sender, "&eSounds");
-                appendSoundLine(sender, "Pickup", cfg.soundPickup);
-                appendSoundLine(sender, "Inventory full", cfg.soundInventoryFull);
-                appendSoundLine(sender, "Denied (tool)", cfg.soundDeniedTool);
-                appendSoundLine(sender, "Denied (seed)", cfg.soundDeniedSeed);
-                send(sender, "");
-
-                send(sender, "&7Tip: &8/&7replenish reload &7after editing config.yml.");
-                send(sender, "");
-                send(sender, LINE);
-                return true;
-            }
-            case "version" -> {
-                if (isDenied(sender, "replenish.version")) return true;
-
-                send(sender, "");
-                send(sender, "&8&m      &8[ &e&lVersion Info &8]&m      &r");
-                send(sender, "");
-
-                UpdateChecker uc = plugin.getUpdateChecker();
-                if (uc == null || !uc.isEnabled()) {
-                    send(
-                            sender,
-                            "  "
-                                    + DOT
-                                    + "&7You're running: &fv"
-                                    + plugin.getDescription().getVersion());
-                    send(sender, "  " + DOT + "&7Update checks: &cDisabled in config.yml");
-                } else if (!uc.isCheckCompleted()) {
-                    send(
-                            sender,
-                            "  "
-                                    + DOT
-                                    + "&7You're running: &fv"
-                                    + plugin.getDescription().getVersion());
-                    send(
-                            sender,
-                            "  " + DOT + "&7Update check: &fStill checking, try again shortly");
-                } else if (uc.isUpdateAvailable()) {
-                    send(
-                            sender,
-                            "  "
-                                    + DOT
-                                    + "&eA new version is available! &8(&fv"
-                                    + uc.getCurrentVersion()
-                                    + " &7➟ &ev"
-                                    + uc.getLatestVersion()
-                                    + "&8)");
-                    send(
-                            sender,
-                            "  "
-                                    + DOT
-                                    + "&7Get it here:"
-                                    + " &bhttps://github.com/Mitra-88/Replenish/releases/latest");
-                } else if (uc.isLocalNewer()) {
-                    send(
-                            sender,
-                            "  "
-                                    + DOT
-                                    + "&dYou're on a development build &8(&fv"
-                                    + uc.getCurrentVersion()
-                                    + "&8, newer than the latest release &7v"
-                                    + uc.getLatestVersion()
-                                    + "&8)");
-                } else {
-                    send(
-                            sender,
-                            "  "
-                                    + DOT
-                                    + "&aYou're up to date! &8(&fv"
-                                    + uc.getCurrentVersion()
-                                    + "&8)");
-                }
-
-                send(sender, "");
-                send(sender, "&7Server details");
-                send(sender, "  " + DOT + "&7Server: &f" + plugin.getServer().getVersion());
-                send(
-                        sender,
-                        "  "
-                                + DOT
-                                + "&7Java: &f"
-                                + System.getProperty("java.version")
-                                + " &8(&7"
-                                + System.getProperty("java.vendor")
-                                + "&8)");
-
-                send(sender, "");
-                send(sender, LINE);
-                return true;
-            }
-            default -> {
-                send(sender, usage(label));
-                return true;
-            }
+            case "help" -> handleHelp(sender);
+            case "toggle" -> handleToggle(sender);
+            case "reload" -> handleReload(sender);
+            case "status" -> handleStatus(sender);
+            case "version" -> handleVersion(sender);
+            default -> send(sender, usage(label));
         }
+        return true;
+    }
+
+    private void sendMainMenu(CommandSender sender) {
+        send(sender, "");
+        send(sender, "&8&m      &8[ &e&lReplenish &7v" + plugin.getDescription().getVersion() + " &8]&m      &r");
+        send(sender, "");
+        send(sender, "&e/replenish help &8- &7Shows a detailed guide on how to use the plugin.");
+        send(sender, "&e/replenish status &8- &7Shows current settings and enabled crops.");
+        send(sender, "&e/replenish reload &8- &7Reloads config.yml without restarting.");
+        send(sender, "&e/replenish toggle &8- &7Turns replanting on or off for everyone.");
+        send(sender, "&e/replenish version &8- &7Shows version and update info.");
+        send(sender, "");
+        send(sender, LINE);
+    }
+
+    private void handleHelp(CommandSender sender) {
+        if (isDenied(sender, "replenish.use")) return;
+
+        send(sender, "");
+        send(sender, "&8&m      &8[ &e&lReplenish &7Help Guide &8]&m      &r");
+        send(sender, "");
+        send(sender, "&eHow it works:");
+        send(sender, "  " + DOT + "&7Use a &fHoe &7for normal crops, or an &fAxe &7for Cocoa.");
+        send(sender, "  " + DOT + "&7Break the crop, and it will auto-replant instantly.");
+        send(sender, "  " + DOT + "&7If seeds are required, 1 seed is taken from your inventory.");
+        send(sender, "");
+        send(sender, "&e&lPro Tip:");
+        send(sender, "  " + DOT + "&7It is best to have at least &f4x &7of the seed of the crop to");
+        send(sender, "    &7avoid replanting it too fast and running out, making it think");
+        send(sender, "    &7you don't have enough seeds!");
+        send(sender, "");
+        send(sender, "&eCommands:");
+        send(sender, "  " + DOT + "&f/replenish status &8- &7Shows current settings and enabled crops.");
+        send(sender, "  " + DOT + "&f/replenish reload &8- &7Reloads config.yml without restarting.");
+        send(sender, "  " + DOT + "&f/replenish toggle &8- &7Turns replanting on or off for everyone.");
+        send(sender, "  " + DOT + "&f/replenish version &8- &7Shows version and update info.");
+        send(sender, "");
+        send(sender, LINE);
+    }
+
+    private void handleToggle(CommandSender sender) {
+        if (isDenied(sender, "replenish.toggle")) return;
+
+        boolean nowEnabled = !plugin.isEnabledGlobally();
+        plugin.getConfig().set("enabled", nowEnabled);
+        plugin.saveConfig();
+        plugin.setGloballyEnabled(nowEnabled);
+
+        String state = nowEnabled ? "&a&lENABLED" : "&c&lDISABLED";
+        String detail = nowEnabled
+                ? "Crops will replant themselves again."
+                : "Crops will no longer replant. Harvests behave like vanilla.";
+        sendPrefixed(sender, "Replenish is now " + state + "&7. " + detail);
+    }
+
+    private void handleReload(CommandSender sender) {
+        if (isDenied(sender, "replenish.reload")) return;
+
+        plugin.reloadLocalConfig();
+        var cfg = plugin.getConfigCache();
+
+        send(sender, "");
+        send(sender, "&8&m      &8[ &e&lConfig Reloaded &8]&m      &r");
+        send(sender, "");
+        send(sender, "  " + DOT + "&7Replanting: " + (cfg.enabled ? "&aOn" : "&cOff"));
+        send(sender, "  " + DOT + "&7Replant delay: &f" + cfg.replantDelayTicks + " tick(s)");
+        send(sender, "  " + DOT + "&7Give drops directly to player: " + (cfg.directPickup ? "&aYes" : "&cNo, drop on ground"));
+        send(sender, "  " + DOT + "&7Require a seed to replant: " + (cfg.requirePlayerSeed ? "&aYes" : "&cNo"));
+        send(sender, "  " + DOT + "&7Sounds: &f" + countEnabled(
+                cfg.soundPickup, cfg.soundInventoryFull, cfg.soundDeniedTool, cfg.soundDeniedSeed) + "/4 &7enabled");
+        send(sender, "");
+        send(sender, "&7Your config.yml changes are now live.");
+        send(sender, "");
+        send(sender, LINE);
+    }
+
+    private void handleStatus(CommandSender sender) {
+        if (isDenied(sender, "replenish.status")) return;
+
+        var cfg = plugin.getConfigCache();
+        String version = plugin.getDescription().getVersion();
+
+        send(sender, "");
+        send(sender, "&8&m      &8[ &e&lReplenish &7v" + version + " &8]&m      &r");
+        send(sender, "");
+
+        send(sender, cfg.enabled ? "&a✔ &fReplanting is active" : "&c✘ &fReplanting is disabled");
+        send(sender, cfg.requirePlayerSeed
+                ? "&a✔ &fPlayers must have a spare seed to replant"
+                : "&c✘ &fNo seed needed to replant");
+        send(sender, cfg.directPickup
+                ? "&a✔ &fHarvested crops go straight to inventory"
+                : "&c✘ &fHarvested crops drop on the ground");
+        send(sender, "");
+
+        send(sender, "&eTiming");
+        send(sender, "  " + DOT + "&7Replants after: &f" + cfg.replantDelayTicks + " tick(s)");
+        send(sender, "  " + DOT + "&7Replant limit: &f" + cfg.maxReplantsPerTick + " per tick");
+        send(sender, "");
+
+        send(sender, "&eCrops that auto-replant");
+        send(sender, "");
+        appendCropLine(sender, Material.WHEAT, "Wheat");
+        appendCropLine(sender, Material.CARROTS, "Carrots");
+        appendCropLine(sender, Material.POTATOES, "Potatoes");
+        appendCropLine(sender, Material.NETHER_WART, "Nether Wart");
+        appendCropLine(sender, Material.COCOA, "Cocoa");
+        appendCropLine(sender, Material.BEETROOTS, "Beetroots");
+        send(sender, "");
+
+        send(sender, "&eSounds");
+        appendSoundLine(sender, "Pickup", cfg.soundPickup);
+        appendSoundLine(sender, "Inventory full", cfg.soundInventoryFull);
+        appendSoundLine(sender, "Denied (tool)", cfg.soundDeniedTool);
+        appendSoundLine(sender, "Denied (seed)", cfg.soundDeniedSeed);
+        send(sender, "");
+
+        send(sender, "&7Tip: &8/&7replenish reload &7after editing config.yml.");
+        send(sender, "");
+        send(sender, LINE);
+    }
+
+    private void handleVersion(CommandSender sender) {
+        if (isDenied(sender, "replenish.version")) return;
+
+        send(sender, "");
+        send(sender, "&8&m      &8[ &e&lVersion Info &8]&m      &r");
+        send(sender, "");
+
+        UpdateChecker uc = plugin.getUpdateChecker();
+        if (uc == null || !uc.isEnabled()) {
+            send(sender, "  " + DOT + "&7You're running: &fv" + plugin.getDescription().getVersion());
+            send(sender, "  " + DOT + "&7Update checks: &cDisabled in config.yml");
+        } else if (!uc.isCheckCompleted()) {
+            send(sender, "  " + DOT + "&7You're running: &fv" + plugin.getDescription().getVersion());
+            send(sender, "  " + DOT + "&7Update check: &fStill checking, try again shortly");
+        } else if (uc.isUpdateAvailable()) {
+            send(sender, "  " + DOT + "&eA new version is available! &8(&fv" + uc.getCurrentVersion()
+                    + " &7➟ &ev" + uc.getLatestVersion() + "&8)");
+            send(sender, "  " + DOT + "&7Get it here: &bhttps://github.com/Mitra-88/Replenish/releases/latest");
+        } else if (uc.isLocalNewer()) {
+            send(sender, "  " + DOT + "&dYou're on a development build &8(&fv" + uc.getCurrentVersion()
+                    + "&8, newer than the latest release &7v" + uc.getLatestVersion() + "&8)");
+        } else {
+            send(sender, "  " + DOT + "&aYou're up to date! &8(&fv" + uc.getCurrentVersion() + "&8)");
+        }
+
+        send(sender, "");
+        send(sender, "&7Server details");
+        send(sender, "  " + DOT + "&7Server: &f" + plugin.getServer().getVersion());
+        send(sender, "  " + DOT + "&7Java: &f" + System.getProperty("java.version")
+                + " &8(&7" + System.getProperty("java.vendor") + "&8)");
+        send(sender, "");
+        send(sender, LINE);
     }
 
     private void appendCropLine(CommandSender sender, Material material, String displayName) {
@@ -338,19 +222,8 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
             return;
         }
         String soundName = sound.sound() != null ? sound.sound().name() : "UNKNOWN";
-        send(
-                sender,
-                "  "
-                        + DOT
-                        + "&7"
-                        + label
-                        + ": &a"
-                        + soundName
-                        + " &8(&7vol &f"
-                        + fmt(sound.volume())
-                        + "&8, &7pitch &f"
-                        + fmt(sound.pitch())
-                        + "&8)");
+        send(sender, "  " + DOT + "&7" + label + ": &a" + soundName
+                + " &8(&7vol &f" + fmt(sound.volume()) + "&8, &7pitch &f" + fmt(sound.pitch()) + "&8)");
     }
 
     private static String fmt(float value) {
@@ -366,8 +239,7 @@ public class ReplenishCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public List<String> onTabComplete(
-            CommandSender sender, Command command, String alias, String[] args) {
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
             List<String> allowed = new ArrayList<>(5);

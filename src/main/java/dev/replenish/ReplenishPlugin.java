@@ -20,12 +20,12 @@ public class ReplenishPlugin extends JavaPlugin {
     private static final int DEFAULT_REPLANT_DELAY_TICKS = 1;
     private static final int DEFAULT_MAX_REPLANTS = 1024;
     private static final int MIN_REPLANTS_PER_TICK = 256;
-    int CONFIG_VERSION = 5;
-
     private static final String PREFIX = "&8[&eReplenish&8] &7";
 
-    private final AtomicReference<ConfigCache> configCacheRef =
-            new AtomicReference<>(ConfigCache.getDefault());
+    int CONFIG_VERSION = 5;
+
+    private final AtomicReference<ConfigCache> configCacheRef = new AtomicReference<>(ConfigCache.getDefault());
+
     private volatile ReplantQueue replantQueue;
     private AgeMetaRegistry ageMetaRegistry;
     private UpdateChecker updateChecker;
@@ -44,20 +44,18 @@ public class ReplenishPlugin extends JavaPlugin {
         for (Boolean enabled : cfg.cropEnabled.values()) {
             if (enabled) supportedCrops++;
         }
+
         sendConsole("Loaded successfully.");
         sendConsole("Supported crops: &f" + supportedCrops);
         sendConsole("Queue size: &f" + cfg.maxReplantsPerTick);
         sendConsole("Delay: &f" + cfg.replantDelayTicks + " tick");
-
         sendConsole("Running version: &fv" + getDescription().getVersion());
 
         boolean checkUpdates = getConfig().getBoolean("checkUpdates", true);
         updateChecker = new UpdateChecker(this, checkUpdates);
         updateChecker.check();
 
-        getServer()
-                .getPluginManager()
-                .registerEvents(new ReplenishListener(this, ageMetaRegistry), this);
+        getServer().getPluginManager().registerEvents(new ReplenishListener(this, ageMetaRegistry), this);
 
         PluginCommand command = getCommand("replenish");
         if (command != null) {
@@ -84,8 +82,7 @@ public class ReplenishPlugin extends JavaPlugin {
         int oldVersion = config.getInt("config-version", 1);
         if (!config.contains("config-version") || oldVersion < CONFIG_VERSION) {
             sendConsole("&eYour config file is outdated (v" + oldVersion + ").");
-            sendConsole(
-                    "&eUpdating to &fv" + CONFIG_VERSION + "&e and adding new default options...");
+            sendConsole("&eUpdating to &fv" + CONFIG_VERSION + "&e and adding new default options...");
             sendConsole("&7(Don't worry, your existing custom settings are safe!)");
 
             config.options().copyDefaults(true);
@@ -93,12 +90,8 @@ public class ReplenishPlugin extends JavaPlugin {
             regenerated = true;
         }
 
-        int delayTicks =
-                Math.max(1, config.getInt("replantDelayTicks", DEFAULT_REPLANT_DELAY_TICKS));
-        int maxPerTick =
-                Math.max(
-                        MIN_REPLANTS_PER_TICK,
-                        config.getInt("maxReplantsPerTick", DEFAULT_MAX_REPLANTS));
+        int delayTicks = Math.max(1, config.getInt("replantDelayTicks", DEFAULT_REPLANT_DELAY_TICKS));
+        int maxPerTick = Math.max(MIN_REPLANTS_PER_TICK, config.getInt("maxReplantsPerTick", DEFAULT_MAX_REPLANTS));
 
         ConfigCache newCache = ConfigCache.from(config, delayTicks, maxPerTick);
         configCacheRef.set(newCache);
@@ -106,11 +99,8 @@ public class ReplenishPlugin extends JavaPlugin {
         if (replantQueue != null) {
             int pending = replantQueue.getPendingCount();
             if (pending > 0) {
-                sendConsole(
-                        "&eDiscarded "
-                                + pending
-                                + " pending replants during config reload (queue processes in 1"
-                                + " tick)");
+                sendConsole("&eDiscarded " + pending
+                        + " pending replants during config reload (queue processes in 1 tick)");
             }
             replantQueue.stop();
         }
@@ -129,21 +119,20 @@ public class ReplenishPlugin extends JavaPlugin {
 
     public void setGloballyEnabled(boolean enabled) {
         ConfigCache current = getConfigCache();
-        ConfigCache newCache =
-                new ConfigCache(
-                        enabled,
-                        current.requirePlayerSeed,
-                        current.directPickup,
-                        current.replantDelayTicks,
-                        current.maxReplantsPerTick,
-                        current.cropEnabled,
-                        current.msgInventoryFull,
-                        current.msgRequiresTool,
-                        current.msgNeedSeed,
-                        current.soundPickup,
-                        current.soundInventoryFull,
-                        current.soundDeniedTool,
-                        current.soundDeniedSeed);
+        ConfigCache newCache = new ConfigCache(
+                enabled,
+                current.requirePlayerSeed,
+                current.directPickup,
+                current.replantDelayTicks,
+                current.maxReplantsPerTick,
+                current.cropEnabled,
+                current.msgInventoryFull,
+                current.msgRequiresTool,
+                current.msgNeedSeed,
+                current.soundPickup,
+                current.soundInventoryFull,
+                current.soundDeniedTool,
+                current.soundDeniedSeed);
         configCacheRef.set(newCache);
     }
 
@@ -156,14 +145,11 @@ public class ReplenishPlugin extends JavaPlugin {
     }
 
     public void enqueueReplant(
-            Block block,
-            Material plantMaterial,
-            int delayTicks,
-            int targetAge,
-            BlockFace cocoaFacingDirection) {
+            Block block, Material plantMaterial, int delayTicks, int targetAge, BlockFace cocoaFacingDirection) {
         ReplantQueue queue = this.replantQueue;
-        if (queue != null)
+        if (queue != null) {
             queue.enqueue(block, plantMaterial, delayTicks, targetAge, cocoaFacingDirection);
+        }
     }
 
     private void sendConsole(String message) {
@@ -245,13 +231,11 @@ public class ReplenishPlugin extends JavaPlugin {
                     readCrops(config),
                     config.getString(
                             "messages.inventory-full",
-                            "&8[&eReplenish&8] &8» &7Your inventory is full! Items dropped on the"
-                                    + " ground."),
+                            "&8[&eReplenish&8] &8» &7Your inventory is full! Items dropped on the ground."),
                     config.getString(
                             "messages.requires-tool",
                             "&8[&eReplenish&8] &8» &e{crop} &7requires &e{tool}&7."),
-                    config.getString(
-                            "messages.need-seed", "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c."),
+                    config.getString("messages.need-seed", "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c."),
                     readSound(config, "pickup", Sound.ENTITY_ITEM_PICKUP, 1.0f),
                     readSound(config, "inventory-full", Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f),
                     readSound(config, "denied-tool", Sound.ENTITY_VILLAGER_NO, 0.5f),
@@ -268,14 +252,8 @@ public class ReplenishPlugin extends JavaPlugin {
             try {
                 sound = Sound.valueOf(soundName.trim().toUpperCase(Locale.ROOT));
             } catch (IllegalArgumentException ex) {
-                Bukkit.getLogger()
-                        .warning(
-                                "[Replenish] Unknown sound '"
-                                        + soundName
-                                        + "' for sounds."
-                                        + key
-                                        + ".sound - falling back to "
-                                        + defaultSound.name());
+                Bukkit.getLogger().warning("[Replenish] Unknown sound '" + soundName + "' for sounds." + key
+                        + ".sound - falling back to " + defaultSound.name());
             }
 
             float volume = (float) config.getDouble(base + "volume", (float) 1.0);
