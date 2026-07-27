@@ -14,6 +14,7 @@ public record ConfigCache(
         boolean directPickup,
         int replantDelayTicks,
         int maxReplantsPerTick,
+        int maxReplantsQueued,
         Map<Material, Boolean> cropEnabled,
         String inventoryFullMessage,
         String requiresToolMessage,
@@ -35,18 +36,17 @@ public record ConfigCache(
         return cropEnabled.getOrDefault(crop.material(), true);
     }
 
-    
     public ConfigCache withEnabled(boolean newEnabled) {
         return new ConfigCache(
                 newEnabled, requirePlayerSeed, directPickup,
-                replantDelayTicks, maxReplantsPerTick,
+                replantDelayTicks, maxReplantsPerTick, maxReplantsQueued,
                 cropEnabled, inventoryFullMessage, requiresToolMessage, needSeedMessage,
                 pickupSound, inventoryFullSound, deniedToolSound, deniedSeedSound);
     }
 
     public static ConfigCache defaults() {
         return new ConfigCache(
-                true, true, true, 1, 1024,
+                true, true, true, 1, 1024, 4096,
                 defaultCropToggles(),
                 Messages.INVENTORY_FULL_DEFAULT,
                 Messages.REQUIRES_TOOL_DEFAULT,
@@ -57,13 +57,14 @@ public record ConfigCache(
                 new SoundEffect(true, Sound.ENTITY_VILLAGER_NO,    1.0f, 0.5f));
     }
 
-    public static ConfigCache from(FileConfiguration config, int delayTicks, int maxPerTick) {
+    public static ConfigCache from(FileConfiguration config, int delayTicks, int maxPerTick, int maxQueued) {
         return new ConfigCache(
                 config.getBoolean("enabled",            true),
                 config.getBoolean("requirePlayerSeed",  true),
                 config.getBoolean("directPickup",       true),
                 delayTicks,
                 maxPerTick,
+                maxQueued,
                 readCrops(config),
                 config.getString("messages.inventory-full", Messages.INVENTORY_FULL_DEFAULT),
                 config.getString("messages.requires-tool",  Messages.REQUIRES_TOOL_DEFAULT),

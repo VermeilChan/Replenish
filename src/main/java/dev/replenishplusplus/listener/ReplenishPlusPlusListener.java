@@ -161,9 +161,7 @@ public final class ReplenishPlusPlusListener implements Listener {
         }
 
         event.setDropItems(false);
-        Collection<ItemStack> drops = wasMature
-                ? block.getDrops(tool, player)
-                : Collections.emptyList();
+        Collection<ItemStack> drops = wasMature ? block.getDrops(tool, player) : Collections.emptyList();
 
         distributeDrops(player, block, config, drops);
         scheduleReplant(player, block, crop, config, replantedAge, blockData);

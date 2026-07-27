@@ -17,7 +17,8 @@ public final class WarningThrottle {
         ABANDONED_REPLANT  ("abandoned_replant"),
         REPLANT_FAILED     ("replant_failed"),
         AGE_DATA_MISSING   ("age_data_missing"),
-        DELAY_TRUNCATION   ("delay_truncation");
+        DELAY_TRUNCATION   ("delay_truncation"),
+        QUEUE_BACKPRESSURE ("queue_backpressure");
 
         private final String key;
         Category(String key) { this.key = key; }

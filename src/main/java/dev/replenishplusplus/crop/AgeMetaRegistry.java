@@ -15,8 +15,7 @@ import java.util.logging.Level;
 
 public final class AgeMetaRegistry {
 
-    public static final List<BlockFace> COCOA_FACES = List.of(
-            BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST);
+    public static final List<BlockFace> COCOA_FACES = List.of(BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST);
 
     private final Map<Material, CropInfo> registry;
 
@@ -26,8 +25,7 @@ public final class AgeMetaRegistry {
             try {
                 register(crop);
             } catch (Throwable error) {
-                plugin.getLogger().log(Level.WARNING,
-                        "Age meta scan skipped for " + crop.material(), error);
+                plugin.getLogger().log(Level.WARNING, "Age meta scan skipped for " + crop.material(), error);
             }
         }
     }
@@ -38,9 +36,7 @@ public final class AgeMetaRegistry {
         if (!(base instanceof Ageable)) return;
 
         int maxAge = ((Ageable) base).getMaximumAge();
-        CropInfo info = crop.isCocoa()
-                ? buildCocoa(base, maxAge)
-                : buildSimple(crop, base, maxAge);
+        CropInfo info = crop.isCocoa() ? buildCocoa(base, maxAge) : buildSimple(crop, base, maxAge);
 
         if (info != null) {
             registry.put(material, info);

@@ -6,7 +6,7 @@
 # GENERAL SETTINGS
 # --------------------------
 
-config-version: 6              # don't touch this
+config-version: 7              # don't touch this
 
 enabled: true                  # false = no replanting
 requirePlayerSeed: true        # eat 1 seed on mature harvest

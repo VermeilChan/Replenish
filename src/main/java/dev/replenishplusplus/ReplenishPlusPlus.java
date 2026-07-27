@@ -2,6 +2,7 @@ package dev.replenishplusplus;
 
 import dev.replenishplusplus.command.ReplenishPlusPlusCommand;
 import dev.replenishplusplus.config.ConfigCache;
+import dev.replenishplusplus.config.ConfigMigrator;
 import dev.replenishplusplus.config.Messages;
 import dev.replenishplusplus.crop.AgeMetaRegistry;
 import dev.replenishplusplus.crop.CropType;
@@ -26,8 +27,9 @@ public final class ReplenishPlusPlus extends JavaPlugin {
 
     private static final int DEFAULT_REPLANT_DELAY_TICKS = 1;
     private static final int DEFAULT_MAX_REPLANTS = 1024;
+    private static final int DEFAULT_MAX_QUEUED   = 4096;
     private static final int MIN_REPLANTS_PER_TICK = 256;
-    private static final int CONFIG_VERSION = 6;
+    private static final int MIN_QUEUED           = 256;
 
     private final AtomicReference<ConfigCache> configCacheRef =
             new AtomicReference<>(ConfigCache.defaults());
@@ -45,21 +47,19 @@ public final class ReplenishPlusPlus extends JavaPlugin {
         reloadLocalConfig();
 
         ConfigCache config = getConfigCache();
-        long enabledCrops = config.cropEnabled().values().stream()
-                .filter(Boolean::booleanValue)
-                .count();
+        long enabledCrops = config.cropEnabled().values().stream().filter(Boolean::booleanValue).count();
 
         sendConsole("Loaded successfully.");
         sendConsole("Supported crops: <white>" + enabledCrops);
-        sendConsole("Queue size: <white>" + config.maxReplantsPerTick());
+        sendConsole("Replants per tick: <white>" + config.maxReplantsPerTick());
+        sendConsole("Queue capacity: <white>" + config.maxReplantsQueued());
         sendConsole("Delay: <white>" + config.replantDelayTicks() + " tick");
         sendConsole("Running version: <white>v" + getPluginMeta().getVersion());
 
         updateChecker = new UpdateChecker(this, getConfig().getBoolean("checkUpdates", true));
         updateChecker.check();
 
-        getServer().getPluginManager()
-                .registerEvents(new ReplenishPlusPlusListener(this, ageMetaRegistry), this);
+        getServer().getPluginManager().registerEvents(new ReplenishPlusPlusListener(this, ageMetaRegistry), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> new ReplenishPlusPlusCommand(this).register(event.registrar()));
     }
@@ -72,47 +72,34 @@ public final class ReplenishPlusPlus extends JavaPlugin {
     public void reloadLocalConfig() {
         reloadConfig();
         FileConfiguration config = getConfig();
-        boolean regenerated = migrateConfigIfNeeded(config);
+
+        boolean migrated = new ConfigMigrator(this, config).migrate();
+
+        if (migrated) {
+            reloadConfig();
+            config = getConfig();
+        }
 
         int delayTicks = Math.max(1, config.getInt("replantDelayTicks", DEFAULT_REPLANT_DELAY_TICKS));
         int maxPerTick = Math.max(MIN_REPLANTS_PER_TICK, config.getInt("maxReplantsPerTick", DEFAULT_MAX_REPLANTS));
+        int maxQueued  = Math.max(MIN_QUEUED, config.getInt("maxReplantsQueued", DEFAULT_MAX_QUEUED));
 
-        configCacheRef.set(ConfigCache.from(config, delayTicks, maxPerTick));
-        restartQueue(maxPerTick, regenerated);
+        configCacheRef.set(ConfigCache.from(config, delayTicks, maxPerTick, maxQueued));
+
+        restartQueue(maxPerTick, maxQueued);
     }
 
-    private boolean migrateConfigIfNeeded(FileConfiguration config) {
-        int oldVersion = config.getInt("config-version", 1);
-        if (config.contains("config-version") && oldVersion >= CONFIG_VERSION) {
-            return false;
-        }
-
-        sendConsole("<yellow>Your config file is outdated (v" + oldVersion + ").");
-        sendConsole("<yellow>Updating to <white>v" + CONFIG_VERSION
-                + "<yellow> and adding new default options...");
-        sendConsole("<gray>(Don't worry, your existing custom settings are safe!)");
-
-        config.options().copyDefaults(true);
-        config.set("config-version", CONFIG_VERSION);
-        return true;
-    }
-
-    private void restartQueue(int maxPerTick, boolean saveAfterMigration) {
+    private void restartQueue(int maxPerTick, int maxQueued) {
         if (replantQueue != null) {
             int pending = replantQueue.pendingCount();
             if (pending > 0) {
-                sendConsole("<yellow>Discarded " + pending
-                        + " pending replants during config reload (queue processes in 1 tick)");
+                sendConsole("<yellow>Discarded " + pending + " pending replants during config reload (queue processes in 1 tick)");
             }
             replantQueue.stop();
         }
-        replantQueue = new ReplantQueue(this, maxPerTick, ageMetaRegistry);
+        replantQueue = new ReplantQueue(this, maxPerTick, maxQueued, ageMetaRegistry);
         replantQueue.start();
 
-        if (saveAfterMigration) {
-            saveConfig();
-            sendConsole("<green>Config successfully updated and saved!");
-        }
     }
 
     public UpdateChecker getUpdateChecker() { return updateChecker; }

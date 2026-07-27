@@ -19,10 +19,10 @@ import java.util.logging.Level;
 
 public final class ReplantQueue {
 
-    private static final int WHEEL_BITS       = 13;
-    private static final int WHEEL_SIZE       = 1 << WHEEL_BITS;
-    private static final int WHEEL_MASK       = WHEEL_SIZE - 1;
-    private static final int INITIAL_POOL_SIZE = 1 << 14;
+    private static final int WHEEL_BITS         = 13;
+    private static final int WHEEL_SIZE         = 1 << WHEEL_BITS;
+    private static final int WHEEL_MASK         = WHEEL_SIZE - 1;
+    private static final int INITIAL_POOL_SIZE  = 1 << 10;
     private static final int MAX_UNLOAD_RETRIES = 20;
 
     private static final int AGE_MASK      = 0xFF;
@@ -34,6 +34,7 @@ public final class ReplantQueue {
     private final Plugin plugin;
     private final AgeMetaRegistry ageMetaRegistry;
     private final int maxPerTick;
+    private final int maxPoolSize;
 
     private final int[] wheelHeads = new int[WHEEL_SIZE];
 
@@ -44,13 +45,15 @@ public final class ReplantQueue {
 
     private int freeHead = -1;
     private int cursor   = 0;
+    private int pendingCount = 0;
     private ScheduledTask scheduledTask;
     private volatile boolean started = false;
 
-    public ReplantQueue(Plugin plugin, int maxPerTick, AgeMetaRegistry ageMetaRegistry) {
-        this.plugin = plugin;
+    public ReplantQueue(Plugin plugin, int maxPerTick, int maxPoolSize, AgeMetaRegistry ageMetaRegistry) {
+        this.plugin          = plugin;
         this.ageMetaRegistry = ageMetaRegistry;
-        this.maxPerTick = Math.max(256, maxPerTick);
+        this.maxPerTick      = Math.max(256, maxPerTick);
+        this.maxPoolSize     = Math.max(256, maxPoolSize);
         Arrays.fill(wheelHeads, -1);
         primePool();
     }
@@ -72,21 +75,23 @@ public final class ReplantQueue {
         resetPool();
         Arrays.fill(wheelHeads, -1);
         cursor = 0;
+        pendingCount = 0;
     }
 
     public synchronized int pendingCount() {
-        int count = 0;
-        for (int i = 0; i < WHEEL_SIZE; i++) {
-            for (int head = wheelHeads[i]; head != -1; head = poolNext[head]) {
-                count++;
-            }
-        }
-        return count;
+        return pendingCount;
     }
 
     public synchronized void enqueue(
             Block block, Material material, int delayTicks,
             int targetAge, BlockFace cocoaFacing) {
+
+        if (pendingCount >= maxPoolSize) {
+            WarningThrottle.log(plugin, Level.WARNING,
+                    WarningThrottle.Category.QUEUE_BACKPRESSURE,
+                    "Replant queue saturated (" + pendingCount + "/" + maxPoolSize + ") — dropping replant at " + LocationUtil.describe(block) + " to prevent unbounded growth.");
+            return;
+        }
 
         int delay = clampDelay(delayTicks, block);
         int slot  = (cursor + delay) & WHEEL_MASK;
@@ -97,6 +102,7 @@ public final class ReplantQueue {
         poolMeta[index]      = packMeta(targetAge, cocoaFacing);
         poolNext[index]      = wheelHeads[slot];
         wheelHeads[slot]     = index;
+        pendingCount++;
     }
 
     private synchronized void tick() {
@@ -176,8 +182,7 @@ public final class ReplantQueue {
                 case null -> {
                     WarningThrottle.log(plugin, Level.WARNING,
                             WarningThrottle.Category.AGE_DATA_MISSING,
-                            "No age data found for plant: " + material
-                                    + ", skipping replant at " + LocationUtil.describe(block));
+                            "No age data found for plant: " + material + ", skipping replant at " + LocationUtil.describe(block));
                     return true;
                 }
                 case CocoaCropInfo cocoa -> replantCocoa(index, block, cocoa);
@@ -189,8 +194,7 @@ public final class ReplantQueue {
         } catch (Exception e) {
             WarningThrottle.log(plugin, Level.WARNING,
                     WarningThrottle.Category.REPLANT_FAILED,
-                    "Failed to replant crop at " + LocationUtil.describe(block)
-                            + ": " + e.getMessage());
+                    "Failed to replant crop at " + LocationUtil.describe(block) + ": " + e.getMessage());
         }
         return true;
     }
@@ -210,10 +214,10 @@ public final class ReplantQueue {
         if (!block.getType().isAir()) return;
         if (poolMaterials[index] != Material.COCOA) return;
 
-        int metadata   = poolMeta[index];
-        int targetAge  = metadata & AGE_MASK;
+        int metadata    = poolMeta[index];
+        int targetAge   = metadata & AGE_MASK;
         int faceOrdinal = (metadata >>> FACE_SHIFT) & FACE_MASK;
-        BlockFace face = AgeMetaRegistry.COCOA_FACES.get(faceOrdinal);
+        BlockFace face  = AgeMetaRegistry.COCOA_FACES.get(faceOrdinal);
 
         Block attached = block.getRelative(face);
         if (!CropAnchors.JUNGLE_LOGS.contains(attached.getType())) return;
@@ -235,8 +239,7 @@ public final class ReplantQueue {
         if (delay >= WHEEL_SIZE) {
             WarningThrottle.log(plugin, Level.WARNING,
                     WarningThrottle.Category.DELAY_TRUNCATION,
-                    "Replant delay truncation triggered for block at "
-                            + LocationUtil.describe(block));
+                    "Replant delay truncation triggered for block at " + LocationUtil.describe(block));
             delay = WHEEL_SIZE - 1;
         }
         return delay;
@@ -266,11 +269,12 @@ public final class ReplantQueue {
     }
 
     private void primePool() {
-        poolBlocks    = new Block[ReplantQueue.INITIAL_POOL_SIZE];
-        poolMaterials = new Material[ReplantQueue.INITIAL_POOL_SIZE];
-        poolMeta      = new int[ReplantQueue.INITIAL_POOL_SIZE];
-        poolNext      = new int[ReplantQueue.INITIAL_POOL_SIZE];
-        for (int i = ReplantQueue.INITIAL_POOL_SIZE - 1; i >= 0; i--) {
+        int size = Math.min(INITIAL_POOL_SIZE, maxPoolSize);
+        poolBlocks    = new Block[size];
+        poolMaterials = new Material[size];
+        poolMeta      = new int[size];
+        poolNext      = new int[size];
+        for (int i = size - 1; i >= 0; i--) {
             poolNext[i] = freeHead;
             freeHead    = i;
         }
@@ -284,13 +288,14 @@ public final class ReplantQueue {
             poolNext[i]      = freeHead;
             freeHead         = i;
         }
+        pendingCount = 0;
     }
 
     private void growPool() {
         int oldSize = poolBlocks.length;
-        int newSize = oldSize << 1;
+        int newSize = Math.min(oldSize << 1, maxPoolSize);
         if (newSize <= oldSize) {
-            throw new IllegalStateException("Replant pool size overflow");
+            throw new IllegalStateException("Replant pool exhausted (max=" + maxPoolSize + ")");
         }
 
         poolBlocks    = Arrays.copyOf(poolBlocks,    newSize);
@@ -321,5 +326,6 @@ public final class ReplantQueue {
         poolMeta[index]      = 0;
         poolNext[index]      = freeHead;
         freeHead             = index;
+        pendingCount--;
     }
 }

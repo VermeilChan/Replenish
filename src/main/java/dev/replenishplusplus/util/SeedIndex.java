@@ -74,9 +74,7 @@ public final class SeedIndex {
     }
 
     private static ItemStack readSlot(PlayerInventory inventory, int slot) {
-        return isOffhand(slot)
-                ? inventory.getItem(EquipmentSlot.OFF_HAND)
-                : inventory.getItem(slot);
+        return isOffhand(slot) ? inventory.getItem(EquipmentSlot.OFF_HAND) : inventory.getItem(slot);
     }
 
     private static void writeSlot(PlayerInventory inventory, int slot, ItemStack stack) {

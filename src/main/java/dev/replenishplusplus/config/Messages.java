@@ -2,7 +2,7 @@ package dev.replenishplusplus.config;
 
 public final class Messages {
 
-    public static final String PREFIX = "<dark_gray>[<yellow>Replenish<dark_gray>] <gray>";
+    public static final String PREFIX = "<dark_gray>[<yellow>ReplenishPlusPlus<dark_gray>] <gray>";
     public static final String ARROW  = "<dark_gray>» ";
     public static final String DOT    = "<dark_gray>• ";
     public static final String LINE   = "<dark_gray><strikethrough>                                     ";

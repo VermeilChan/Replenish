@@ -115,6 +115,8 @@ public final class ReplenishPlusPlusCommand {
         send(sender, "");
         send(sender, "  " + Messages.DOT + "<gray>Replanting: " + onOff(cfg.enabled()));
         send(sender, "  " + Messages.DOT + "<gray>Replant delay: <white>" + cfg.replantDelayTicks() + " tick(s)");
+        send(sender, "  " + Messages.DOT + "<gray>Replants per tick: <white>" + cfg.maxReplantsPerTick());
+        send(sender, "  " + Messages.DOT + "<gray>Queue capacity: <white>" + cfg.maxReplantsQueued());
         send(sender, "  " + Messages.DOT + "<gray>Give drops directly to player: "
                 + yesNo(cfg.directPickup(), "No, drop on ground"));
         send(sender, "  " + Messages.DOT + "<gray>Require a seed to replant: "
@@ -148,7 +150,8 @@ public final class ReplenishPlusPlusCommand {
 
         send(sender, "<yellow>Timing");
         send(sender, "  " + Messages.DOT + "<gray>Replants after: <white>" + cfg.replantDelayTicks() + " tick(s)");
-        send(sender, "  " + Messages.DOT + "<gray>Replant limit: <white>" + cfg.maxReplantsPerTick() + " per tick");
+        send(sender, "  " + Messages.DOT + "<gray>Replants per tick: <white>" + cfg.maxReplantsPerTick());
+        send(sender, "  " + Messages.DOT + "<gray>Queue capacity: <white>" + cfg.maxReplantsQueued());
         send(sender, "");
 
         send(sender, "<yellow>Crops that auto-replant");
