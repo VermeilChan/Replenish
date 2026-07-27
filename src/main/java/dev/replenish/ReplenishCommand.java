@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
+@SuppressWarnings("UnstableApiUsage")
 public class ReplenishCommand extends Command {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();

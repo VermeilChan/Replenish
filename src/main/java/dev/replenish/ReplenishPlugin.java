@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+@SuppressWarnings("UnstableApiUsage")
 public class ReplenishPlugin extends JavaPlugin {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();

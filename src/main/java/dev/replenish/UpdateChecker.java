@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SuppressWarnings("UnstableApiUsage")
 public final class UpdateChecker {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
