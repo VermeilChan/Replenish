@@ -1,4 +1,4 @@
-package dev.replenish;
+package dev.replenish.update;
 
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -12,9 +12,13 @@ import java.time.Duration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Checks GitHub releases for a newer version of the plugin.
+ * Runs asynchronously; results are stored in volatile fields.
+ */
 public final class UpdateChecker {
 
-    private static final MiniMessage MM = MiniMessage.miniMessage();
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
 
     private static final String API_URL      = "https://api.github.com/repos/Mitra-88/Replenish/releases/latest";
     private static final String RELEASES_URL = "https://github.com/Mitra-88/Replenish/releases/latest";
@@ -43,6 +47,19 @@ public final class UpdateChecker {
         this.currentVersion = normalize(plugin.getPluginMeta().getVersion());
     }
 
+    // --------------------------- Public API ---------------------------
+
+    public boolean isEnabled()         { return enabled; }
+    public boolean isCheckCompleted()  { return checkCompleted; }
+    public boolean isUpdateAvailable() { return updateAvailable; }
+    public boolean isLocalNewer() {
+        return checkCompleted && compareVersions(currentVersion, latestVersion) > 0;
+    }
+    public String getCurrentVersion()  { return currentVersion; }
+    public String getLatestVersion()   { return latestVersion; }
+
+    // --------------------------- Check ---------------------------
+
     public void check() {
         if (!enabled) return;
 
@@ -56,43 +73,47 @@ public final class UpdateChecker {
 
         HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenAccept(this::handleResponse)
-                .exceptionally(e -> {
-                    console(PREFIX + "<red>Update check failed: " + e.getMessage());
-                    return null;
-                });
+                .exceptionally(this::handleError);
     }
 
     private void handleResponse(HttpResponse<String> response) {
-        if (response.statusCode() == 403) {
-            console(PREFIX + "<red>Update check failed: GitHub API rate-limited.");
+        int status = response.statusCode();
+        if (status == 200) {
+            parseLatestVersion(response.body());
             return;
         }
-        if (response.statusCode() == 404) {
-            console(PREFIX + "<red>Update check failed: No releases found on GitHub.");
-            return;
-        }
-        if (response.statusCode() != 200) {
-            console(PREFIX + "<red>Update check failed: HTTP " + response.statusCode());
-            return;
-        }
+        String reason = switch (status) {
+            case 403 -> "GitHub API rate-limited.";
+            case 404 -> "No releases found on GitHub.";
+            default  -> "HTTP " + status;
+        };
+        console(PREFIX + "<red>Update check failed: " + reason);
+    }
 
-        Matcher matcher = TAG_PATTERN.matcher(response.body());
-        if (matcher.find()) {
-            latestVersion   = normalize(matcher.group(1));
-            updateAvailable = isNewer(currentVersion, latestVersion);
-            checkCompleted  = true;
-            logResult();
-        } else {
+    private void parseLatestVersion(String body) {
+        Matcher matcher = TAG_PATTERN.matcher(body);
+        if (!matcher.find()) {
             console(PREFIX + "<red>Update check failed: Malformed GitHub response.");
+            return;
         }
+        latestVersion   = normalize(matcher.group(1));
+        updateAvailable = compareVersions(currentVersion, latestVersion) < 0;
+        checkCompleted  = true;
+        logResult();
+    }
+
+    private Void handleError(Throwable error) {
+        console(PREFIX + "<red>Update check failed: " + error.getMessage());
+        return null;
     }
 
     private void logResult() {
-        if (updateAvailable) {
+        int comparison = compareVersions(currentVersion, latestVersion);
+        if (comparison < 0) {
             console(PREFIX + "<gray>Update available: <yellow>" + latestVersion
                     + " <gray>(you're on <white>" + currentVersion + "<gray>).");
             console(PREFIX + "<gray>Download: <aqua>" + RELEASES_URL);
-        } else if (isLocalNewer(currentVersion, latestVersion)) {
+        } else if (comparison > 0) {
             console(PREFIX + "<gray>Update Status: <light_purple>Running unreleased/dev build "
                     + "<dark_gray>(<white>" + currentVersion + "<dark_gray>)");
         } else {
@@ -101,56 +122,42 @@ public final class UpdateChecker {
         }
     }
 
-    public boolean isCheckCompleted()  { return checkCompleted; }
-    public boolean isUpdateAvailable() { return updateAvailable; }
-    public String  getCurrentVersion() { return currentVersion; }
-    public String  getLatestVersion()  { return latestVersion; }
-    public boolean isEnabled()         { return enabled; }
-
-    public boolean isLocalNewer() {
-        if (!checkCompleted || latestVersion.equals("Unknown")) return false;
-        return compareVersions(currentVersion, latestVersion) > 0;
-    }
-
     private void console(String message) {
-        Bukkit.getConsoleSender().sendMessage(MM.deserialize(message));
+        Bukkit.getConsoleSender().sendMessage(MINI_MESSAGE.deserialize(message));
     }
+
+    // --------------------------- Version Parsing ---------------------------
 
     private static String normalize(String version) {
         if (version == null) return "";
         String v = version.trim();
-        while (!v.isEmpty() && (v.charAt(0) == 'v' || v.charAt(0) == 'V'))
+        while (!v.isEmpty() && (v.charAt(0) == 'v' || v.charAt(0) == 'V')) {
             v = v.substring(1);
+        }
         return v.split("[-+]", 2)[0];
     }
 
-    private static boolean isNewer(String current, String latest) {
-        return compareVersions(current, latest) < 0;
-    }
+    private static int compareVersions(String left, String right) {
+        if (left.equals(right)) return 0;
 
-    private static boolean isLocalNewer(String current, String latest) {
-        if (latest.equals("Unknown")) return false;
-        return compareVersions(current, latest) > 0;
-    }
+        String[] leftParts  = left.split("\\.");
+        String[] rightParts = right.split("\\.");
+        int length = Math.max(leftParts.length, rightParts.length);
 
-    private static int compareVersions(String v1, String v2) {
-        if (v1.equals(v2)) return 0;
-        String[] c = v1.split("\\.");
-        String[] l = v2.split("\\.");
-        int len = Math.max(c.length, l.length);
-        for (int i = 0; i < len; i++) {
-            int cv = i < c.length ? parseSafe(c[i]) : 0;
-            int lv = i < l.length ? parseSafe(l[i]) : 0;
-            if (cv > lv) return 1;
-            if (cv < lv) return -1;
+        for (int i = 0; i < length; i++) {
+            int leftValue  = i < leftParts.length  ? parseNumeric(leftParts[i])  : 0;
+            int rightValue = i < rightParts.length ? parseNumeric(rightParts[i]) : 0;
+            if (leftValue != rightValue) {
+                return Integer.compare(leftValue, rightValue);
+            }
         }
         return 0;
     }
 
-    private static int parseSafe(String s) {
+    private static int parseNumeric(String part) {
         try {
-            return Integer.parseInt(s.replaceAll("[^0-9]", ""));
-        } catch (Exception e) {
+            return Integer.parseInt(part.replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
             return 0;
         }
     }

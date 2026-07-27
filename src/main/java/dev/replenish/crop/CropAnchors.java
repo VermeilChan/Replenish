@@ -1,0 +1,19 @@
+package dev.replenish.crop;
+
+import org.bukkit.Material;
+
+import java.util.Set;
+
+/**
+ * Block materials a cocoa pod can attach to.
+ */
+public final class CropAnchors {
+
+    public static final Set<Material> JUNGLE_LOGS = Set.of(
+            Material.JUNGLE_LOG,
+            Material.STRIPPED_JUNGLE_LOG,
+            Material.JUNGLE_WOOD,
+            Material.STRIPPED_JUNGLE_WOOD);
+
+    private CropAnchors() {}
+}
