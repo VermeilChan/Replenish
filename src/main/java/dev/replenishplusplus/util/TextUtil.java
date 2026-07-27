@@ -1,4 +1,4 @@
-package dev.replenish.util;
+package dev.replenishplusplus.util;
 
 import java.util.Locale;
 

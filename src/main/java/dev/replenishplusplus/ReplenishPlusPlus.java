@@ -1,13 +1,14 @@
-package dev.replenish;
+package dev.replenishplusplus;
 
-import dev.replenish.command.ReplenishCommand;
-import dev.replenish.config.ConfigCache;
-import dev.replenish.config.Messages;
-import dev.replenish.crop.AgeMetaRegistry;
-import dev.replenish.crop.CropType;
-import dev.replenish.listener.ReplenishListener;
-import dev.replenish.queue.ReplantQueue;
-import dev.replenish.update.UpdateChecker;
+import dev.replenishplusplus.command.ReplenishPlusPlusCommand;
+import dev.replenishplusplus.config.ConfigCache;
+import dev.replenishplusplus.config.Messages;
+import dev.replenishplusplus.crop.AgeMetaRegistry;
+import dev.replenishplusplus.crop.CropType;
+import dev.replenishplusplus.listener.ReplenishPlusPlusListener;
+import dev.replenishplusplus.queue.ReplantQueue;
+import dev.replenishplusplus.update.UpdateChecker;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -19,7 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class ReplenishPlugin extends JavaPlugin {
+public final class ReplenishPlusPlus extends JavaPlugin {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
 
@@ -60,8 +61,10 @@ public final class ReplenishPlugin extends JavaPlugin {
         updateChecker.check();
 
         getServer().getPluginManager()
-                .registerEvents(new ReplenishListener(this, ageMetaRegistry), this);
-        getServer().getCommandMap().register("replenish", new ReplenishCommand(this));
+                .registerEvents(new ReplenishPlusPlusListener(this, ageMetaRegistry), this);
+
+        // Modern LifecycleEventManager command registration
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> new ReplenishPlusPlusCommand(this).register(event.registrar()));
     }
 
     @Override
@@ -117,8 +120,6 @@ public final class ReplenishPlugin extends JavaPlugin {
         }
     }
 
-    // --------------------------- Public API ---------------------------
-
     public UpdateChecker getUpdateChecker() { return updateChecker; }
 
     public ConfigCache getConfigCache() { return configCacheRef.get(); }
@@ -144,8 +145,6 @@ public final class ReplenishPlugin extends JavaPlugin {
             queue.enqueue(block, material, delayTicks, targetAge, cocoaFacing);
         }
     }
-
-    // --------------------------- Console ---------------------------
 
     private void sendConsole(String message) {
         if (console != null) {

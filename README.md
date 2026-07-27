@@ -1,70 +1,61 @@
-# Replenish 🌾
+# Replenish++ 🌾
 
-Tiny, blazing-fast auto-replant QoL plugin for Spigot/Paper, inspired by Hypixel's Replenish mechanic.
+Auto-replant plugin for Paper/Purpur. You break a crop, it goes back in the ground. That's basically it. Stole the idea from Hypixel's Replenish because I got tired of replanting by hand.
 
 ![Preview](assets/output.webp)
 
----
-
 ## What it does
 
-- 🌾 Auto-replants Wheat, Carrots, Potatoes, Nether Wart, Cocoa, Beetroots
-- 🌱 Immature crops keep their current growth stage
-- 🎒 Optional seed consumption (on by default)
-- 📦 Optional direct pickup into your inventory (on by default)
-- 🪓 Requires the correct tool (Hoes / Axes)
-- 🧭 Correctly replants Cocoa with the proper facing
-- 🍀 Fortune enchantments works normally
-- ⚡ Designed for high-performance and large farms
-- 🔊 Fully configurable sounds
+- Replants Wheat, Carrots, Potatoes, Nether Wart, Cocoa, and Beetroots automatically
+- Immature crops stay at whatever growth stage they were at
+- Eats a seed from your inventory on mature harvest (can turn this off)
+- Can pipe drops straight into your inventory instead of the ground (also toggleable)
+- You actually need the right tool in hand. No hoe, no replant. Cocoa needs an axe.
+- Cocoa gets replanted facing the right direction, which was annoying to get right
+- Fortune works like normal
+- Sounds are fully configurable, or you can just mute them all
+- Built to not choke on big farms. There's a per-tick replant cap you can tune.
 
----
+## Install
 
-## Quick install
-
-1. Drop the JAR into `plugins/`
+1. JAR goes in `plugins/`
 2. Start the server
-3. Edit `plugins/Replenish/config.yml` if desired
-4. Done.
+3. Poke at `plugins/Replenish/config.yml` if you want
+4. You're done
 
----
+## What happens by default (no config changes)
 
-## Default behavior (no config edits)
+**Mature crop:**
+- Replants at age 0
+- Takes 1 seed from your inventory/off-hand (if `requirePlayerSeed` is on)
+- Drops go to you directly (if `directPickup` is on)
 
-* Breaking a **mature** crop:
-
-    * Replants at age **0**
-    * Consumes **1 seed** from your inventory (or off-hand) if `requirePlayerSeed` is `true`
-    * Drops go straight to you if `directPickup` is `true`
-
-* Breaking an **immature** crop:
-    * Replants at the **same age** (no seed needed)
+**Immature crop:**
+- Replants at the same age it was. No seed needed.
 
 ---
 
 ## Commands & permissions
 
-| Command              | Description               |
-|----------------------|---------------------------|
-| `/replenish status`  | Show current settings     |
-| `/replenish version` | Show plugin version       |
-| `/replenish toggle`  | Enable/disable the plugin |
-| `/replenish reload`  | Reload the configuration  |
+| Command              | What it does     |
+|----------------------|------------------|
+| `/replenish status`  | Current settings |
+| `/replenish version` | Plugin version   |
+| `/replenish toggle`  | On/off switch    |
+| `/replenish reload`  | Reload config    |
 
 Permissions:
 
-* `replenish.status` (default: **true**)
-* `replenish.version` (default: **true**)
-* `replenish.use` (default: **op**)
-* `replenish.toggle` (default: **op**)
-* `replenish.reload` (default: **op**)
-* `replenish.*` (default: **op**)
+- `replenish.status` - everyone
+- `replenish.version` - everyone
+- `replenish.use` - op
+- `replenish.toggle` - op
+- `replenish.reload` - op
+- `replenish.*` - op
 
----
+## Config
 
-## Configuration
-
-### Common settings
+The stuff you'll probably touch:
 
 ```yaml
 enabled: true
@@ -80,28 +71,28 @@ checkUpdates: true
 
 ```yaml
 # ============================================
-#         REPLENISH CONFIG
+#             REPLENISH++ CONFIG
 # ============================================
 
 # --------------------------
 # GENERAL SETTINGS
 # --------------------------
 
-config-version: 5              # DON'T TOUCH THIS!!!
+config-version: 6              # don't touch this
 
-enabled: true                  # master switch: false disables all replanting globally
-requirePlayerSeed: true        # consume 1 seed from inventory on mature harvest
-directPickup: true             # drops go straight to the player
+enabled: true                  # false = no replanting
+requirePlayerSeed: true        # eat 1 seed on mature harvest
+directPickup: true             # drops go to you, not the ground
 replantDelayTicks: 1           # 1 tick = 50ms
 
 maxReplantsPerTick: 1024      # maximum crops replanted per tick (20 ticks/second)
-        # raise this on beefier servers if replants lag behind
-# lower it on weaker servers to reduce load
+                              # raise this on beefier servers if replants lag behind
+                              # lower it on weaker servers to reduce load
 
 checkUpdates: true             # check GitHub for new releases on server startup
 
 # --------------------------
-# CROP TOGGLES (turn on/off)
+# CROP TOGGLES
 # --------------------------
 
 crops:
@@ -113,23 +104,20 @@ crops:
   beetroots: true
 
 # --------------------------
-# CHAT MESSAGES (customize these)
+# CHAT MESSAGES
 # --------------------------
 # Placeholders: {crop}, {tool}, {seed}, {count}
+# Docs: https://docs.advntr.dev/minimessage/format.html
 
 messages:
-  inventory-full: "&8[&eReplenish&8] &8» &7Your inventory was full, so some items dropped on the ground instead."
-  requires-tool: "&8[&eReplenish&8] &8» &7You need a &e{tool} &7to harvest &e{crop}&7."
-  need-seed: "&8[&eReplenish&8] &8» &7You need &e{count}x {seed} &7in your inventory to replant this."
+  inventory-full: "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>Your inventory was full, so some items dropped on the ground instead."
+  requires-tool: "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>You need a <yellow>{tool} <gray>to harvest <yellow>{crop}<gray>."
+  need-seed: "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>You need <yellow>{count}x {seed} <gray>in your inventory to replant this."
 
 # --------------------------
-# SOUND EFFECTS (customize or disable)
+# SOUND EFFECTS
 # --------------------------
-# Each of the four feedback sounds can be individually enabled/disabled
-# and customized with any Bukkit Sound, volume, and pitch.
-#
-# sound:  Must match a Bukkit Sound enum name (case-insensitive).
-#         Full list: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+# Docs: https://jd.papermc.io/paper/org/bukkit/Sound.html
 #         Invalid names log a warning and fall back to the default.
 # volume: 0.0 (silent) to 1.0 (loudest)
 # pitch:  0.5 (low) to 2.0 (high); 1.0 = normal
@@ -168,11 +156,12 @@ sounds:
 
 </details>
 
-## 💡 Contributions & Pull Requests
+## Contributions
 
-Managing direct PRs gets a bit overwhelming for me, so I keep them disabled for this project to protect my peace. But I'm open to discussion! If you have a features, optimizations, bug fixes, improvements etc., open an issue first. We can chat about it there and see if it fits the project.
-Otherwise, you are highly encouraged to fork or clone this repo and do whatever you want with it. Vibe-code, rip it apart, and build what you want not what other people expect you to build.
-Everyone starts somewhere, and you are goated. You matter, so go start now.
+PRs are disabled on this repo, not because I don't want your help but because managing them gets overwhelming, and I'd rather not ghost people. Open an issue instead, feature ideas, bugs, optimizations, whatever. We'll talk it out there.
+
+That said, fork it, clone it, tear it apart, rebuild it weird. Make the thing *you* want to make. Everyone starts somewhere and you're goated. Go start now.
 
 ## License
+
 This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).

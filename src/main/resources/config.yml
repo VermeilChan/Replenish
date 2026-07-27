@@ -1,16 +1,16 @@
 # ============================================
-#             REPLENISHPLUSPLUS CONFIG
+#             REPLENISH++ CONFIG
 # ============================================
 
 # --------------------------
 # GENERAL SETTINGS
 # --------------------------
 
-config-version: 6              # DON'T TOUCH THIS!!!
+config-version: 6              # don't touch this
 
-enabled: true                  # master switch: false disables all replanting globally
-requirePlayerSeed: true        # consume 1 seed from inventory on mature harvest
-directPickup: true             # drops go straight to the player
+enabled: true                  # false = no replanting
+requirePlayerSeed: true        # eat 1 seed on mature harvest
+directPickup: true             # drops go to you, not the ground
 replantDelayTicks: 1           # 1 tick = 50ms
 
 maxReplantsPerTick: 1024      # maximum crops replanted per tick (20 ticks/second)
@@ -20,7 +20,7 @@ maxReplantsPerTick: 1024      # maximum crops replanted per tick (20 ticks/secon
 checkUpdates: true             # check GitHub for new releases on server startup
 
 # --------------------------
-# CROP TOGGLES (turn on/off)
+# CROP TOGGLES
 # --------------------------
 
 crops:
@@ -32,7 +32,7 @@ crops:
   beetroots: true
 
 # --------------------------
-# CHAT MESSAGES (MiniMessage format)
+# CHAT MESSAGES
 # --------------------------
 # Placeholders: {crop}, {tool}, {seed}, {count}
 # Docs: https://docs.advntr.dev/minimessage/format.html

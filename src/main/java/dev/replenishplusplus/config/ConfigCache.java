@@ -1,6 +1,6 @@
-package dev.replenish.config;
+package dev.replenishplusplus.config;
 
-import dev.replenish.crop.CropType;
+import dev.replenishplusplus.crop.CropType;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;

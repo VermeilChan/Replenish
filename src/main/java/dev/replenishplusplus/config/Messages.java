@@ -1,4 +1,4 @@
-package dev.replenish.config;
+package dev.replenishplusplus.config;
 
 /**
  * Shared MiniMessage formatting constants and default message templates.

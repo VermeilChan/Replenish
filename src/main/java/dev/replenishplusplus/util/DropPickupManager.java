@@ -1,6 +1,6 @@
-package dev.replenish.util;
+package dev.replenishplusplus.util;
 
-import dev.replenish.config.SoundEffect;
+import dev.replenishplusplus.config.SoundEffect;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;

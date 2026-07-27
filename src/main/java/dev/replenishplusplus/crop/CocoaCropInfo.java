@@ -1,4 +1,4 @@
-package dev.replenish.crop;
+package dev.replenishplusplus.crop;
 
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;

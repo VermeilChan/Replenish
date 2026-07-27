@@ -1,15 +1,15 @@
-package dev.replenish.listener;
+package dev.replenishplusplus.listener;
 
-import dev.replenish.ReplenishPlugin;
-import dev.replenish.config.ConfigCache;
-import dev.replenish.crop.AgeMetaRegistry;
-import dev.replenish.crop.CropAnchors;
-import dev.replenish.crop.CropInfo;
-import dev.replenish.crop.CropType;
-import dev.replenish.util.DropPickupManager;
-import dev.replenish.util.LocationUtil;
-import dev.replenish.util.SeedIndex;
-import dev.replenish.util.TextUtil;
+import dev.replenishplusplus.ReplenishPlusPlus;
+import dev.replenishplusplus.config.ConfigCache;
+import dev.replenishplusplus.crop.AgeMetaRegistry;
+import dev.replenishplusplus.crop.CropAnchors;
+import dev.replenishplusplus.crop.CropInfo;
+import dev.replenishplusplus.crop.CropType;
+import dev.replenishplusplus.util.DropPickupManager;
+import dev.replenishplusplus.util.LocationUtil;
+import dev.replenishplusplus.util.SeedIndex;
+import dev.replenishplusplus.util.TextUtil;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class ReplenishListener implements Listener {
+public final class ReplenishPlusPlusListener implements Listener {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
 
@@ -63,12 +63,12 @@ public final class ReplenishListener implements Listener {
         SEED_TYPES = Collections.unmodifiableSet(seeds);
     }
 
-    private final ReplenishPlugin plugin;
+    private final ReplenishPlusPlus plugin;
     private final AgeMetaRegistry ageMetaRegistry;
     private final Map<UUID, Long> lastInvalidation = new ConcurrentHashMap<>();
     private final Map<UUID, Long> messageCooldown  = new ConcurrentHashMap<>();
 
-    public ReplenishListener(ReplenishPlugin plugin, AgeMetaRegistry ageMetaRegistry) {
+    public ReplenishPlusPlusListener(ReplenishPlusPlus plugin, AgeMetaRegistry ageMetaRegistry) {
         this.plugin = plugin;
         this.ageMetaRegistry = ageMetaRegistry;
     }

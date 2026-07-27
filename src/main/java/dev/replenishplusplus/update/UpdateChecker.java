@@ -1,4 +1,4 @@
-package dev.replenish.update;
+package dev.replenishplusplus.update;
 
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;

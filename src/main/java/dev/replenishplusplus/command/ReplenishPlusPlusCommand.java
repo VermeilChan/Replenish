@@ -1,118 +1,60 @@
-package dev.replenish.command;
+package dev.replenishplusplus.command;
 
-import dev.replenish.ReplenishPlugin;
-import dev.replenish.config.ConfigCache;
-import dev.replenish.config.Messages;
-import dev.replenish.config.SoundEffect;
-import dev.replenish.crop.CropType;
-import dev.replenish.update.UpdateChecker;
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import dev.replenishplusplus.ReplenishPlusPlus;
+import dev.replenishplusplus.config.ConfigCache;
+import dev.replenishplusplus.config.Messages;
+import dev.replenishplusplus.config.SoundEffect;
+import dev.replenishplusplus.crop.CropType;
+import dev.replenishplusplus.update.UpdateChecker;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Registry;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 
-public final class ReplenishCommand extends Command {
+public final class ReplenishPlusPlusCommand {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+    private final ReplenishPlusPlus plugin;
 
-    private final ReplenishPlugin plugin;
-
-    public ReplenishCommand(ReplenishPlugin plugin) {
-        super("replenish");
+    public ReplenishPlusPlusCommand(ReplenishPlusPlus plugin) {
         this.plugin = plugin;
-        setDescription("Replenish admin command");
-        setUsage("/replenish <toggle|reload|status|version>");
-        setPermission("replenish.use");
     }
 
-    // --------------------------- Dispatch ---------------------------
+    public void register(Commands commands) {
+        LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("replenishplusplus")
+                .executes(ctx -> execute(ctx.getSource(), "replenishplusplus.use", this::sendMainMenu))
+                .then(Commands.literal("help")
+                        .executes(ctx -> execute(ctx.getSource(), "replenishplusplus.use", this::sendHelp)))
+                .then(Commands.literal("status")
+                        .executes(ctx -> execute(ctx.getSource(), "replenishplusplus.status", this::sendStatus)))
+                .then(Commands.literal("reload")
+                        .executes(ctx -> execute(ctx.getSource(), "replenishplusplus.reload", this::handleReload)))
+                .then(Commands.literal("toggle")
+                        .executes(ctx -> execute(ctx.getSource(), "replenishplusplus.toggle", this::handleToggle)))
+                .then(Commands.literal("version")
+                        .executes(ctx -> execute(ctx.getSource(), "replenishplusplus.version", this::sendVersion)));
 
-    @Override
-    public boolean execute(@NotNull CommandSender sender, @NotNull String label, String @NonNull [] args) {
-        if (!sender.hasPermission("replenish.use")) {
+        commands.register(root.build(), "ReplenishPlusPlus admin command");
+    }
+
+    // --------------------------- Dispatch Helper ---------------------------
+
+    private int execute(CommandSourceStack source, String permission, Consumer<CommandSender> action) {
+        CommandSender sender = source.getSender();
+        if (!sender.hasPermission(permission)) {
             send(sender, Messages.PREFIX + Messages.ARROW
                     + "<red>You don't have permission to do that. "
-                    + "<dark_gray>(<gray>requires replenish.use<dark_gray>)");
-            return true;
+                    + "<dark_gray>(<gray>requires " + permission + "<dark_gray>)");
+            return 0; // Return 0 to properly signal failure/blocked execution
         }
-
-        if (args.length == 0) {
-            sendMainMenu(sender);
-            return true;
-        }
-
-        Subcommand sub = Subcommand.match(args[0]);
-        if (sub == null) {
-            send(sender, Messages.PREFIX + Messages.ARROW
-                    + "<red>Unknown subcommand. <gray>Use <white>/" + label
-                    + " <gray>for a list of commands.");
-            return true;
-        }
-
-        if (!sender.hasPermission(sub.permission)) {
-            send(sender, Messages.PREFIX + Messages.ARROW
-                    + "<red>You don't have permission to do that. "
-                    + "<dark_gray>(<gray>requires " + sub.permission + "<dark_gray>)");
-            return true;
-        }
-
-        switch (sub) {
-            case HELP    -> sendHelp(sender);
-            case TOGGLE  -> handleToggle(sender);
-            case RELOAD  -> handleReload(sender);
-            case STATUS  -> sendStatus(sender);
-            case VERSION -> sendVersion(sender);
-        }
-        return true;
-    }
-
-    @Override
-    public @NotNull List<String> tabComplete(
-            @NotNull CommandSender sender, @NotNull String alias, String[] args) {
-        if (args.length != 1) return Collections.emptyList();
-
-        String prefix = args[0].toLowerCase(Locale.ROOT);
-        List<String> suggestions = new ArrayList<>();
-        for (Subcommand sub : Subcommand.values()) {
-            if (sender.hasPermission(sub.permission) && sub.lowerName.startsWith(prefix)) {
-                suggestions.add(sub.lowerName);
-            }
-        }
-        return suggestions;
-    }
-
-    // --------------------------- Subcommand Metadata ---------------------------
-
-    private enum Subcommand {
-        HELP   ("replenish.use"),
-        TOGGLE ("replenish.toggle"),
-        RELOAD ("replenish.reload"),
-        STATUS ("replenish.status"),
-        VERSION("replenish.version");
-
-        private final String permission;
-        private final String lowerName;
-
-        Subcommand(String permission) {
-            this.permission = permission;
-            this.lowerName = name().toLowerCase(Locale.ROOT);
-        }
-
-        static Subcommand match(String input) {
-            if (input == null) return null;
-            String lower = input.toLowerCase(Locale.ROOT);
-            for (Subcommand sub : values()) {
-                if (sub.lowerName.equals(lower)) return sub;
-            }
-            return null;
-        }
+        action.accept(sender);
+        return Command.SINGLE_SUCCESS; // Returns 1 on actual success
     }
 
     // --------------------------- Handlers ---------------------------
@@ -120,21 +62,21 @@ public final class ReplenishCommand extends Command {
     private void sendMainMenu(CommandSender sender) {
         String version = plugin.getPluginMeta().getVersion();
         send(sender, "");
-        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>Replenish <gray>v"
+        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>ReplenishPlusPlus <gray>v"
                 + version + " <dark_gray>]       <reset>");
         send(sender, "");
-        send(sender, "<yellow>/replenish help <dark_gray>- <gray>Shows a detailed guide on how to use the plugin.");
-        send(sender, "<yellow>/replenish status <dark_gray>- <gray>Shows current settings and enabled crops.");
-        send(sender, "<yellow>/replenish reload <dark_gray>- <gray>Reloads config.yml without restarting.");
-        send(sender, "<yellow>/replenish toggle <dark_gray>- <gray>Turns replanting on or off for everyone.");
-        send(sender, "<yellow>/replenish version <dark_gray>- <gray>Shows version and update info.");
+        send(sender, "<yellow>/replenishplusplus help <dark_gray>- <gray>Shows a detailed guide on how to use the plugin.");
+        send(sender, "<yellow>/replenishplusplus status <dark_gray>- <gray>Shows current settings and enabled crops.");
+        send(sender, "<yellow>/replenishplusplus reload <dark_gray>- <gray>Reloads config.yml without restarting.");
+        send(sender, "<yellow>/replenishplusplus toggle <dark_gray>- <gray>Turns replanting on or off for everyone.");
+        send(sender, "<yellow>/replenishplusplus version <dark_gray>- <gray>Shows version and update info.");
         send(sender, "");
         send(sender, Messages.LINE);
     }
 
     private void sendHelp(CommandSender sender) {
         send(sender, "");
-        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>Replenish <gray>Help Guide <dark_gray>]       <reset>");
+        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>ReplenishPlusPlus <gray>Help Guide <dark_gray>]       <reset>");
         send(sender, "");
         send(sender, "<yellow>How it works:");
         send(sender, "  " + Messages.DOT + "<gray>Use a <white>Hoe <gray>for normal crops, or an <white>Axe <gray>for Cocoa.");
@@ -147,10 +89,10 @@ public final class ReplenishCommand extends Command {
         send(sender, "    <gray>you don't have enough seeds!");
         send(sender, "");
         send(sender, "<yellow>Commands:");
-        send(sender, "  " + Messages.DOT + "<white>/replenish status <dark_gray>- <gray>Shows current settings and enabled crops.");
-        send(sender, "  " + Messages.DOT + "<white>/replenish reload <dark_gray>- <gray>Reloads config.yml without restarting.");
-        send(sender, "  " + Messages.DOT + "<white>/replenish toggle <dark_gray>- <gray>Turns replanting on or off for everyone.");
-        send(sender, "  " + Messages.DOT + "<white>/replenish version <dark_gray>- <gray>Shows version and update info.");
+        send(sender, "  " + Messages.DOT + "<white>/replenishplusplus status <dark_gray>- <gray>Shows current settings and enabled crops.");
+        send(sender, "  " + Messages.DOT + "<white>/replenishplusplus reload <dark_gray>- <gray>Reloads config.yml without restarting.");
+        send(sender, "  " + Messages.DOT + "<white>/replenishplusplus toggle <dark_gray>- <gray>Turns replanting on or off for everyone.");
+        send(sender, "  " + Messages.DOT + "<white>/replenishplusplus version <dark_gray>- <gray>Shows version and update info.");
         send(sender, "");
         send(sender, Messages.LINE);
     }
@@ -165,7 +107,7 @@ public final class ReplenishCommand extends Command {
         String detail = nowEnabled
                 ? "Crops will replant themselves again."
                 : "Crops will no longer replant. Harvests behave like vanilla.";
-        sendPrefixed(sender, "Replenish is now " + state + "<gray>. " + detail);
+        sendPrefixed(sender, "ReplenishPlusPlus is now " + state + "<gray>. " + detail);
     }
 
     private void handleReload(CommandSender sender) {
@@ -194,7 +136,7 @@ public final class ReplenishCommand extends Command {
         String version = plugin.getPluginMeta().getVersion();
 
         send(sender, "");
-        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>Replenish <gray>v"
+        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>ReplenishPlusPlus <gray>v"
                 + version + " <dark_gray>]       <reset>");
         send(sender, "");
         send(sender, cfg.enabled()
@@ -228,7 +170,7 @@ public final class ReplenishCommand extends Command {
         appendSoundLine(sender, "Denied (seed)",  cfg.deniedSeedSound());
         send(sender, "");
 
-        send(sender, "<gray>Tip: <dark_gray>/<gray>replenish reload <gray>after editing config.yml.");
+        send(sender, "<gray>Tip: <dark_gray>/<gray>replenishplusplus reload <gray>after editing config.yml.");
         send(sender, "");
         send(sender, Messages.LINE);
     }
@@ -250,7 +192,7 @@ public final class ReplenishCommand extends Command {
         } else if (uc.isUpdateAvailable()) {
             send(sender, "  " + Messages.DOT + "<yellow>A new version is available! <dark_gray>(<white>v"
                     + uc.getCurrentVersion() + " <gray>➟ <yellow>v" + uc.getLatestVersion() + "<dark_gray>)");
-            send(sender, "  " + Messages.DOT + "<gray>Get it here: <aqua>https://github.com/Mitra-88/Replenish/releases/latest");
+            send(sender, "  " + Messages.DOT + "<gray>Get it here: <aqua>https://github.com/Mitra-88/ReplenishPlusPlus/releases/latest");
         } else if (uc.isLocalNewer()) {
             send(sender, "  " + Messages.DOT + "<light_purple>You're on a development build <dark_gray>(<white>v"
                     + uc.getCurrentVersion() + "<dark_gray>, newer than the latest release <gray>v"

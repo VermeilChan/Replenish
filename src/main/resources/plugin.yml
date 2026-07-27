@@ -1,38 +1,38 @@
-name: Replenish
-main: dev.replenish.ReplenishPlugin
+name: ReplenishPlusPlus
+main: dev.replenishplusplus.ReplenishPlusPlus
 version: "${project.version}"
 api-version: "26.2"
-description: "Auto-replants crops with age preservation, Fortune-respecting drops, and direct pickup."
+description: "Auto-replant plugin for Paper/Purpur. You break a crop, it goes back in the ground. That's basically it. Stole the idea from Hypixel's Replenish because I got tired of replanting by hand."
 authors: [ "Mitra-88" ]
-website: https://github.com/Mitra-88/Replenish
+website: "https://github.com/Mitra-88/ReplenishPlusPlus"
 
 permissions:
-  replenish.*:
-    description: "Access to all Replenish permissions."
+  replenishplusplus.*:
+    description: "Access to all ReplenishPlusPlus permissions."
     default: op
     children:
-      replenish.use: true
-      replenish.toggle: true
-      replenish.reload: true
-      replenish.status: true
-      replenish.version: true
+      replenishplusplus.use: true
+      replenishplusplus.toggle: true
+      replenishplusplus.reload: true
+      replenishplusplus.status: true
+      replenishplusplus.version: true
 
-  replenish.use:
-    description: "Allows using /replenish base command."
+  replenishplusplus.use:
+    description: "Allows using /replenishplusplus base command."
     default: true
 
-  replenish.toggle:
-    description: "Allows toggling Replenish on/off globally."
+  replenishplusplus.toggle:
+    description: "Allows toggling ReplenishPlusPlus on/off globally."
     default: op
 
-  replenish.reload:
-    description: "Allows reloading Replenish configuration."
+  replenishplusplus.reload:
+    description: "Allows reloading ReplenishPlusPlus configuration."
     default: op
 
-  replenish.status:
-    description: "Allows viewing current Replenish status."
+  replenishplusplus.status:
+    description: "Allows viewing current ReplenishPlusPlus status."
     default: true
 
-  replenish.version:
+  replenishplusplus.version:
     description: "Allows viewing version information."
     default: true

@@ -1,4 +1,4 @@
-package dev.replenish.crop;
+package dev.replenishplusplus.crop;
 
 /**
  * Precomputed BlockData states for a crop, indexed by age.

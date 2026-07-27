@@ -1,4 +1,4 @@
-package dev.replenish.util;
+package dev.replenishplusplus.util;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

@@ -1,4 +1,4 @@
-package dev.replenish.config;
+package dev.replenishplusplus.config;
 
 import org.bukkit.Location;
 import org.bukkit.Sound;

@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev</groupId>
-    <artifactId>Replenish</artifactId>
+    <artifactId>ReplenishPlusPlus</artifactId>
     <version>7.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Replenish</name>
+    <name>ReplenishPlusPlus</name>
 
     <properties>
         <java.version>25</java.version>
