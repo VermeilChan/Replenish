@@ -58,7 +58,7 @@ public final class ReplenishPlusPlusCommand {
     private void sendMainMenu(CommandSender sender) {
         String version = plugin.getPluginMeta().getVersion();
         send(sender, "");
-        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>ReplenishPlusPlus <gray>v"
+        send(sender, "<dark_gray>      [ <yellow><bold>ReplenishPlusPlus <gray>v"
                 + version + " <dark_gray>]       <reset>");
         send(sender, "");
         send(sender, "<yellow>/replenishplusplus help <dark_gray>- <gray>Shows a detailed guide on how to use the plugin.");
@@ -72,7 +72,7 @@ public final class ReplenishPlusPlusCommand {
 
     private void sendHelp(CommandSender sender) {
         send(sender, "");
-        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>ReplenishPlusPlus <gray>Help Guide <dark_gray>]       <reset>");
+        send(sender, "<dark_gray>      [ <yellow><bold>ReplenishPlusPlus <gray>Help Guide <dark_gray>]       <reset>");
         send(sender, "");
         send(sender, "<yellow>How it works:");
         send(sender, "  " + Messages.DOT + "<gray>Use a <white>Hoe <gray>for normal crops, or an <white>Axe <gray>for Cocoa.");
@@ -111,7 +111,7 @@ public final class ReplenishPlusPlusCommand {
         ConfigCache cfg = plugin.getConfigCache();
 
         send(sender, "");
-        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>Config Reloaded <dark_gray>]       <reset>");
+        send(sender, "<dark_gray>      [ <yellow><bold>Config Reloaded <dark_gray>]       <reset>");
         send(sender, "");
         send(sender, "  " + Messages.DOT + "<gray>Replanting: " + onOff(cfg.enabled()));
         send(sender, "  " + Messages.DOT + "<gray>Replant delay: <white>" + cfg.replantDelayTicks() + " tick(s)");
@@ -132,7 +132,7 @@ public final class ReplenishPlusPlusCommand {
         String version = plugin.getPluginMeta().getVersion();
 
         send(sender, "");
-        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>ReplenishPlusPlus <gray>v"
+        send(sender, "<dark_gray>      [ <yellow><bold>ReplenishPlusPlus <gray>v"
                 + version + " <dark_gray>]       <reset>");
         send(sender, "");
         send(sender, cfg.enabled()
@@ -173,7 +173,7 @@ public final class ReplenishPlusPlusCommand {
 
     private void sendVersion(CommandSender sender) {
         send(sender, "");
-        send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>Version Info <dark_gray>]       <reset>");
+        send(sender, "<dark_gray>      [ <yellow><bold>Version Info <dark_gray>]       <reset>");
         send(sender, "");
 
         UpdateChecker uc = plugin.getUpdateChecker();
