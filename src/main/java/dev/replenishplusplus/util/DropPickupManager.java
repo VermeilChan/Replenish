@@ -10,10 +10,6 @@ import org.bukkit.inventory.PlayerInventory;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- * Handles giving harvested drops to a player, falling back to dropping
- * them on the ground when the inventory is full.
- */
 public final class DropPickupManager {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();

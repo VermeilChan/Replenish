@@ -9,10 +9,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.Locale;
 import java.util.Optional;
 
-/**
- * Reads a SoundEffect from config, resolving both modern namespaced
- * keys and legacy Bukkit enum names.
- */
 @SuppressWarnings("UnstableApiUsage")
 public final class SoundResolver {
 

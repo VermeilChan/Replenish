@@ -11,12 +11,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Caches the first slot of each seed type in a player's inventory.
- * Invalidated on any inventory event that could move seeds.
- * Thread-safe: the outer map is concurrent; each player's inner map
- * is guarded by synchronizing on itself.
- */
 public final class SeedIndex {
 
     private static final int SLOT_NONE     = -1;
@@ -33,10 +27,6 @@ public final class SeedIndex {
         }
     }
 
-    /**
-     * Attempts to consume one unit of the given seed from the player's inventory.
-     * Returns true on success, false if the player has none.
-     */
     public static boolean consume(Player player, Material seedMaterial) {
         if (player == null || seedMaterial == null || seedMaterial.isAir() || !seedMaterial.isItem()) {
             return false;
@@ -52,7 +42,6 @@ public final class SeedIndex {
                 if (tryConsume(inventory, cache, seedMaterial, slot)) return true;
             }
 
-            // Stale cache — rebuild and retry.
             cache.clear();
             cache.putAll(buildIndex(inventory));
 

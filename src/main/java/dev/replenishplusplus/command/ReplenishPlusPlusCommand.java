@@ -43,21 +43,17 @@ public final class ReplenishPlusPlusCommand {
         commands.register(root.build(), "ReplenishPlusPlus admin command");
     }
 
-    // --------------------------- Dispatch Helper ---------------------------
-
     private int execute(CommandSourceStack source, String permission, Consumer<CommandSender> action) {
         CommandSender sender = source.getSender();
         if (!sender.hasPermission(permission)) {
             send(sender, Messages.PREFIX + Messages.ARROW
                     + "<red>You don't have permission to do that. "
                     + "<dark_gray>(<gray>requires " + permission + "<dark_gray>)");
-            return 0; // Return 0 to properly signal failure/blocked execution
+            return 0;
         }
         action.accept(sender);
-        return Command.SINGLE_SUCCESS; // Returns 1 on actual success
+        return Command.SINGLE_SUCCESS;
     }
-
-    // --------------------------- Handlers ---------------------------
 
     private void sendMainMenu(CommandSender sender) {
         String version = plugin.getPluginMeta().getVersion();
@@ -210,8 +206,6 @@ public final class ReplenishPlusPlusCommand {
         send(sender, "");
         send(sender, Messages.LINE);
     }
-
-    // --------------------------- Helpers ---------------------------
 
     private void appendSoundLine(CommandSender sender, String label, SoundEffect sound) {
         if (sound == null || !sound.enabled()) {

@@ -5,9 +5,6 @@ import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
-/**
- * Immutable sound effect descriptor with safe clamping of volume and pitch.
- */
 public record SoundEffect(boolean enabled, Sound sound, float volume, float pitch) {
 
     private static final float MIN_VOLUME = 0.0f;
@@ -20,7 +17,6 @@ public record SoundEffect(boolean enabled, Sound sound, float volume, float pitc
         pitch  = clamp(pitch,  MIN_PITCH,  MAX_PITCH);
     }
 
-    /** Returns true only if enabled AND a valid sound is configured. */
     @Override
     public boolean enabled() {
         return enabled && sound != null;

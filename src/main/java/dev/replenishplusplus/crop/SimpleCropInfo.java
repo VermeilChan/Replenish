@@ -2,10 +2,6 @@ package dev.replenishplusplus.crop;
 
 import org.bukkit.block.data.BlockData;
 
-/**
- * CropInfo for crops that grow straight up on farmland or soul sand
- * (wheat, carrots, potatoes, nether wart, beetroots).
- */
 public record SimpleCropInfo(
         int maximumAge,
         boolean requiresFarmland,

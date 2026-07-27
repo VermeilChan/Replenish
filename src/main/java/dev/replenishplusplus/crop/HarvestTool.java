@@ -2,11 +2,6 @@ package dev.replenishplusplus.crop;
 
 import org.bukkit.Material;
 
-/**
- * The two tool categories used to harvest crops in this plugin.
- * Matching is done by name suffix so future material tiers (e.g. copper)
- * are supported automatically without code changes.
- */
 public enum HarvestTool {
     HOE,
     AXE;

@@ -1,8 +1,5 @@
 package dev.replenishplusplus.config;
 
-/**
- * Shared MiniMessage formatting constants and default message templates.
- */
 public final class Messages {
 
     public static final String PREFIX = "<dark_gray>[<yellow>Replenish<dark_gray>] <gray>";

@@ -4,14 +4,10 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
-/**
- * Location and block-related helper methods.
- */
 public final class LocationUtil {
 
     private LocationUtil() {}
 
-    /** Returns the centre of the block containing the given location. */
     public static Location centerOf(Location location) {
         if (location == null) return null;
         World world = location.getWorld();
@@ -24,7 +20,6 @@ public final class LocationUtil {
                 0f, 0f);
     }
 
-    /** Returns true if the chunk at the given location is currently loaded. */
     public static boolean isChunkLoadedAround(Location location) {
         if (location == null) return false;
         World world = location.getWorld();
@@ -36,7 +31,6 @@ public final class LocationUtil {
         }
     }
 
-    /** Human-readable block identifier for log messages. */
     public static String describe(Block block) {
         if (block == null) return "null_block";
         World world = block.getWorld();

@@ -17,11 +17,6 @@ import org.bukkit.plugin.Plugin;
 import java.util.Arrays;
 import java.util.logging.Level;
 
-/**
- * Time-wheel scheduler for delayed crop replants.
- * Uses a pooled array-based node structure to avoid GC pressure.
- * Each node packs target age, cocoa facing, and retry count into a single int.
- */
 public final class ReplantQueue {
 
     private static final int WHEEL_BITS       = 13;
@@ -30,7 +25,6 @@ public final class ReplantQueue {
     private static final int INITIAL_POOL_SIZE = 1 << 14;
     private static final int MAX_UNLOAD_RETRIES = 20;
 
-    // Metadata bit layout:  [retries:8][facing:2][age:8]
     private static final int AGE_MASK      = 0xFF;
     private static final int FACE_SHIFT    = 8;
     private static final int FACE_MASK     = 0x3;
@@ -61,8 +55,6 @@ public final class ReplantQueue {
         primePool();
     }
 
-    // --------------------------- Lifecycle ---------------------------
-
     public synchronized void start() {
         if (started) return;
         started = true;
@@ -92,8 +84,6 @@ public final class ReplantQueue {
         return count;
     }
 
-    // --------------------------- Enqueue ---------------------------
-
     public synchronized void enqueue(
             Block block, Material material, int delayTicks,
             int targetAge, BlockFace cocoaFacing) {
@@ -108,8 +98,6 @@ public final class ReplantQueue {
         poolNext[index]      = wheelHeads[slot];
         wheelHeads[slot]     = index;
     }
-
-    // --------------------------- Tick ---------------------------
 
     private synchronized void tick() {
         if (!started) return;
@@ -129,7 +117,6 @@ public final class ReplantQueue {
             int next = poolNext[head];
             poolNext[head] = -1;
 
-            // Cap work per tick — defer the rest to the next slot.
             if (processed >= maxPerTick) {
                 deferredTail = appendDeferred(deferredHead, deferredTail, head);
                 if (deferredHead == -1) deferredHead = head;
@@ -177,13 +164,6 @@ public final class ReplantQueue {
         return node;
     }
 
-    // --------------------------- Replant Logic ---------------------------
-
-    /**
-     * Attempts to replant the crop at the given slot.
-     * @return true if the slot is fully handled (success or permanent failure)
-     *         and should be released; false if it should be deferred.
-     */
     private boolean tryReplant(int index, Block block) {
         if (!isChunkLoaded(block)) return false;
 
@@ -241,8 +221,6 @@ public final class ReplantQueue {
         block.setBlockData(info.stateFor(targetAge, faceOrdinal), false);
     }
 
-    // --------------------------- Helpers ---------------------------
-
     private static boolean isChunkLoaded(Block block) {
         World world = block.getWorld();
         try {
@@ -284,10 +262,8 @@ public final class ReplantQueue {
         if (face == BlockFace.EAST)  return 1;
         if (face == BlockFace.SOUTH) return 2;
         if (face == BlockFace.WEST)  return 3;
-        return 0; // NORTH or null
+        return 0;
     }
-
-    // --------------------------- Pool Management ---------------------------
 
     private void primePool() {
         poolBlocks    = new Block[ReplantQueue.INITIAL_POOL_SIZE];

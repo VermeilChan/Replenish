@@ -13,14 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
-/**
- * Scans supported crops at startup and precomputes every age-state
- * BlockData variant so the replant queue never needs to clone or
- * mutate BlockData at runtime.
- */
 public final class AgeMetaRegistry {
 
-    /** Horizontal faces a cocoa pod can attach to, in ordinal order. */
     public static final List<BlockFace> COCOA_FACES = List.of(
             BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST);
 

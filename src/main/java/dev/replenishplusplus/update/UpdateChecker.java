@@ -12,10 +12,6 @@ import java.time.Duration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Checks GitHub releases for a newer version of the plugin.
- * Runs asynchronously; results are stored in volatile fields.
- */
 public final class UpdateChecker {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
@@ -47,8 +43,6 @@ public final class UpdateChecker {
         this.currentVersion = normalize(plugin.getPluginMeta().getVersion());
     }
 
-    // --------------------------- Public API ---------------------------
-
     public boolean isEnabled()         { return enabled; }
     public boolean isCheckCompleted()  { return checkCompleted; }
     public boolean isUpdateAvailable() { return updateAvailable; }
@@ -57,8 +51,6 @@ public final class UpdateChecker {
     }
     public String getCurrentVersion()  { return currentVersion; }
     public String getLatestVersion()   { return latestVersion; }
-
-    // --------------------------- Check ---------------------------
 
     public void check() {
         if (!enabled) return;
@@ -125,8 +117,6 @@ public final class UpdateChecker {
     private void console(String message) {
         Bukkit.getConsoleSender().sendMessage(MINI_MESSAGE.deserialize(message));
     }
-
-    // --------------------------- Version Parsing ---------------------------
 
     private static String normalize(String version) {
         if (version == null) return "";

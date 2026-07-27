@@ -37,8 +37,6 @@ public final class ReplenishPlusPlus extends JavaPlugin {
     private UpdateChecker updateChecker;
     private ConsoleCommandSender console;
 
-    // --------------------------- Lifecycle ---------------------------
-
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -63,7 +61,6 @@ public final class ReplenishPlusPlus extends JavaPlugin {
         getServer().getPluginManager()
                 .registerEvents(new ReplenishPlusPlusListener(this, ageMetaRegistry), this);
 
-        // Modern LifecycleEventManager command registration
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> new ReplenishPlusPlusCommand(this).register(event.registrar()));
     }
 
@@ -71,8 +68,6 @@ public final class ReplenishPlusPlus extends JavaPlugin {
     public void onDisable() {
         if (replantQueue != null) replantQueue.stop();
     }
-
-    // --------------------------- Config ---------------------------
 
     public void reloadLocalConfig() {
         reloadConfig();

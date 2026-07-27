@@ -5,11 +5,6 @@ import org.bukkit.Material;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * Identifies every crop the plugin can auto-replant.
- * Centralizes the crop → material / seed / tool mapping so callers
- * never need switch statements or hardcoded Material lookups.
- */
 public enum CropType {
     WHEAT       (Material.WHEAT,        Material.WHEAT_SEEDS,    HarvestTool.HOE),
     CARROTS     (Material.CARROTS,      Material.CARROT,         HarvestTool.HOE),
@@ -43,7 +38,7 @@ public enum CropType {
     public boolean isCocoa()     { return this == COCOA; }
     public boolean isNetherWart() { return this == NETHER_WART; }
 
-    /** Returns the matching CropType for a Material, or null if unsupported. */
+    
     public static CropType fromMaterial(Material material) {
         return BY_MATERIAL.get(material);
     }

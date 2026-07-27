@@ -6,10 +6,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
-/**
- * Suppresses repeated warnings of the same category within a short time window.
- * After the window expires, the suppressed count is logged, then the new message.
- */
 public final class WarningThrottle {
 
     private static final long SUPPRESS_DURATION_MS = 3000L;

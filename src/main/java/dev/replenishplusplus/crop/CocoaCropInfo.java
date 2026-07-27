@@ -5,10 +5,6 @@ import org.bukkit.block.data.BlockData;
 
 import java.util.List;
 
-/**
- * CropInfo for cocoa pods, which grow on the side of jungle logs
- * in four horizontal facing directions.
- */
 public record CocoaCropInfo(
         int maximumAge,
         List<BlockFace> faces,

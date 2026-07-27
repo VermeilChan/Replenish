@@ -8,10 +8,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * Immutable snapshot of all plugin configuration.
- * Stored in an AtomicReference for lock-free reads during reloads.
- */
 public record ConfigCache(
         boolean enabled,
         boolean requirePlayerSeed,
@@ -39,7 +35,7 @@ public record ConfigCache(
         return cropEnabled.getOrDefault(crop.material(), true);
     }
 
-    /** Returns a copy with the global enabled flag changed. */
+    
     public ConfigCache withEnabled(boolean newEnabled) {
         return new ConfigCache(
                 newEnabled, requirePlayerSeed, directPickup,

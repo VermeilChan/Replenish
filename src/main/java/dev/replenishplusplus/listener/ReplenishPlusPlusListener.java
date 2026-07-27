@@ -73,8 +73,6 @@ public final class ReplenishPlusPlusListener implements Listener {
         this.ageMetaRegistry = ageMetaRegistry;
     }
 
-    // --------------------------- Seed Cache Invalidation Events ---------------------------
-
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID uuid = event.getPlayer().getUniqueId();
@@ -128,8 +126,6 @@ public final class ReplenishPlusPlusListener implements Listener {
         }
     }
 
-    // --------------------------- Block Break (Core Logic) ---------------------------
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
@@ -172,8 +168,6 @@ public final class ReplenishPlusPlusListener implements Listener {
         distributeDrops(player, block, config, drops);
         scheduleReplant(player, block, crop, config, replantedAge, blockData);
     }
-
-    // --------------------------- Break Helpers ---------------------------
 
     private boolean isInCreativeOrSpectator(Player player) {
         GameMode mode = player.getGameMode();
@@ -248,8 +242,6 @@ public final class ReplenishPlusPlusListener implements Listener {
         }
     }
 
-    // --------------------------- Cocoa Facing Resolution ---------------------------
-
     private BlockFace determineCocoaFacing(Block block, BlockData originalData, Player player) {
         BlockFace originalFacing = originalData instanceof Directional directional
                 ? directional.getFacing()
@@ -286,8 +278,6 @@ public final class ReplenishPlusPlusListener implements Listener {
     private boolean isJungle(Material material) {
         return CropAnchors.JUNGLE_LOGS.contains(material);
     }
-
-    // --------------------------- Cooldown Helpers ---------------------------
 
     private boolean isRelevantSeed(ItemStack item) {
         return item != null && SEED_TYPES.contains(item.getType());
