@@ -1,26 +1,31 @@
 package dev.replenish;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ReplenishPlugin extends JavaPlugin {
 
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+
     private static final int DEFAULT_REPLANT_DELAY_TICKS = 1;
     private static final int DEFAULT_MAX_REPLANTS = 1024;
     private static final int MIN_REPLANTS_PER_TICK = 256;
-    private static final String PREFIX = "&8[&eReplenish&8] &7";
+    private static final String PREFIX = "<dark_gray>[<yellow>Replenish<dark_gray>] <gray>";
 
     int CONFIG_VERSION = 5;
 
@@ -46,23 +51,20 @@ public class ReplenishPlugin extends JavaPlugin {
         }
 
         sendConsole("Loaded successfully.");
-        sendConsole("Supported crops: &f" + supportedCrops);
-        sendConsole("Queue size: &f" + cfg.maxReplantsPerTick);
-        sendConsole("Delay: &f" + cfg.replantDelayTicks + " tick");
-        sendConsole("Running version: &fv" + getDescription().getVersion());
+        sendConsole("Supported crops: <white>" + supportedCrops);
+        sendConsole("Queue size: <white>" + cfg.maxReplantsPerTick);
+        sendConsole("Delay: <white>" + cfg.replantDelayTicks + " tick");
+        sendConsole("Running version: <white>v" + getPluginMeta().getVersion());
 
         boolean checkUpdates = getConfig().getBoolean("checkUpdates", true);
         updateChecker = new UpdateChecker(this, checkUpdates);
         updateChecker.check();
 
-        getServer().getPluginManager().registerEvents(new ReplenishListener(this, ageMetaRegistry), this);
+        getServer().getPluginManager()
+                .registerEvents(new ReplenishListener(this, ageMetaRegistry), this);
 
-        PluginCommand command = getCommand("replenish");
-        if (command != null) {
-            ReplenishCommand replenishCommand = new ReplenishCommand(this);
-            command.setExecutor(replenishCommand);
-            command.setTabCompleter(replenishCommand);
-        }
+        // Register directly to Paper's CommandMap
+        getServer().getCommandMap().register("replenish", new ReplenishCommand(this));
     }
 
     @Override
@@ -81,9 +83,10 @@ public class ReplenishPlugin extends JavaPlugin {
         boolean regenerated = false;
         int oldVersion = config.getInt("config-version", 1);
         if (!config.contains("config-version") || oldVersion < CONFIG_VERSION) {
-            sendConsole("&eYour config file is outdated (v" + oldVersion + ").");
-            sendConsole("&eUpdating to &fv" + CONFIG_VERSION + "&e and adding new default options...");
-            sendConsole("&7(Don't worry, your existing custom settings are safe!)");
+            sendConsole("<yellow>Your config file is outdated (v" + oldVersion + ").");
+            sendConsole("<yellow>Updating to <white>v" + CONFIG_VERSION
+                    + "<yellow> and adding new default options...");
+            sendConsole("<gray>(Don't worry, your existing custom settings are safe!)");
 
             config.options().copyDefaults(true);
             config.set("config-version", CONFIG_VERSION);
@@ -99,8 +102,7 @@ public class ReplenishPlugin extends JavaPlugin {
         if (replantQueue != null) {
             int pending = replantQueue.getPendingCount();
             if (pending > 0) {
-                sendConsole("&eDiscarded " + pending
-                        + " pending replants during config reload (queue processes in 1 tick)");
+                sendConsole("<yellow>Discarded " + pending + " pending replants during config reload (queue processes in 1 tick)");
             }
             replantQueue.stop();
         }
@@ -109,7 +111,7 @@ public class ReplenishPlugin extends JavaPlugin {
 
         if (regenerated) {
             saveConfig();
-            sendConsole("&aConfig successfully updated and saved!");
+            sendConsole("<green>Config successfully updated and saved!");
         }
     }
 
@@ -154,7 +156,7 @@ public class ReplenishPlugin extends JavaPlugin {
 
     private void sendConsole(String message) {
         if (console != null) {
-            console.sendMessage(ColorUtils.color(PREFIX + message));
+            console.sendMessage(MM.deserialize(PREFIX + message));
         }
     }
 
@@ -176,19 +178,12 @@ public class ReplenishPlugin extends JavaPlugin {
         final SoundEffect soundDeniedSeed;
 
         private ConfigCache(
-                boolean enabled,
-                boolean requirePlayerSeed,
-                boolean directPickup,
-                int replantDelayTicks,
-                int maxReplantsPerTick,
+                boolean enabled, boolean requirePlayerSeed, boolean directPickup,
+                int replantDelayTicks, int maxReplantsPerTick,
                 Map<Material, Boolean> cropEnabled,
-                String msgInventoryFull,
-                String msgRequiresTool,
-                String msgNeedSeed,
-                SoundEffect soundPickup,
-                SoundEffect soundInventoryFull,
-                SoundEffect soundDeniedTool,
-                SoundEffect soundDeniedSeed) {
+                String msgInventoryFull, String msgRequiresTool, String msgNeedSeed,
+                SoundEffect soundPickup, SoundEffect soundInventoryFull,
+                SoundEffect soundDeniedTool, SoundEffect soundDeniedSeed) {
             this.enabled = enabled;
             this.requirePlayerSeed = requirePlayerSeed;
             this.directPickup = directPickup;
@@ -206,15 +201,15 @@ public class ReplenishPlugin extends JavaPlugin {
 
         static ConfigCache getDefault() {
             return new ConfigCache(
-                    true,
-                    true,
-                    true,
-                    DEFAULT_REPLANT_DELAY_TICKS,
-                    DEFAULT_MAX_REPLANTS,
+                    true, true, true,
+                    DEFAULT_REPLANT_DELAY_TICKS, DEFAULT_MAX_REPLANTS,
                     defaultCrops(),
-                    "&8[&eReplenish&8] &8» &7Your inventory is full! Items dropped on the ground.",
-                    "&8[&eReplenish&8] &8» &e{crop} &7requires &e{tool}&7.",
-                    "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c.",
+                    "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» "
+                            + "<gray>Your inventory is full! Items dropped on the ground.",
+                    "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» "
+                            + "<yellow>{crop} <gray>requires <yellow>{tool}<gray>.",
+                    "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» "
+                            + "<red>Need 1 <yellow>{seed}<red>.",
                     new SoundEffect(true, Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f),
                     new SoundEffect(true, Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f),
                     new SoundEffect(true, Sound.ENTITY_VILLAGER_NO, 1.0f, 0.5f),
@@ -229,57 +224,119 @@ public class ReplenishPlugin extends JavaPlugin {
                     delayTicks,
                     maxPerTick,
                     readCrops(config),
-                    config.getString(
-                            "messages.inventory-full",
-                            "&8[&eReplenish&8] &8» &7Your inventory is full! Items dropped on the ground."),
-                    config.getString(
-                            "messages.requires-tool",
-                            "&8[&eReplenish&8] &8» &e{crop} &7requires &e{tool}&7."),
-                    config.getString("messages.need-seed", "&8[&eReplenish&8] &8» &cNeed 1 &e{seed}&c."),
-                    readSound(config, "pickup", Sound.ENTITY_ITEM_PICKUP, 1.0f),
+                    config.getString("messages.inventory-full",
+                            "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» "
+                                    + "<gray>Your inventory is full! Items dropped on the ground."),
+                    config.getString("messages.requires-tool",
+                            "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» "
+                                    + "<yellow>{crop} <gray>requires <yellow>{tool}<gray>."),
+                    config.getString("messages.need-seed",
+                            "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» "
+                                    + "<red>Need 1 <yellow>{seed}<red>."),
+                    readSound(config, "pickup",         Sound.ENTITY_ITEM_PICKUP,    1.0f),
                     readSound(config, "inventory-full", Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f),
-                    readSound(config, "denied-tool", Sound.ENTITY_VILLAGER_NO, 0.5f),
-                    readSound(config, "denied-seed", Sound.ENTITY_VILLAGER_NO, 0.5f));
+                    readSound(config, "denied-tool",    Sound.ENTITY_VILLAGER_NO,    0.5f),
+                    readSound(config, "denied-seed",    Sound.ENTITY_VILLAGER_NO,    0.5f));
         }
 
         private static SoundEffect readSound(
                 FileConfiguration config, String key, Sound defaultSound, float defaultPitch) {
-            String base = "sounds." + key + ".";
-            boolean enabled = config.getBoolean(base + "enabled", true);
 
-            String soundName = config.getString(base + "sound", defaultSound.name());
-            Sound sound = defaultSound;
-            try {
-                sound = Sound.valueOf(soundName.trim().toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException ex) {
-                Bukkit.getLogger().warning("[Replenish] Unknown sound '" + soundName + "' for sounds." + key
-                        + ".sound - falling back to " + defaultSound.name());
+            String base   = "sounds." + key + ".";
+            String path   = base + "sound";
+            String pathEn = base + "enabled";
+            String pathV  = base + "volume";
+            String pathP  = base + "pitch";
+
+            boolean enabled = config.getBoolean(pathEn, true);
+            String  rawName = config.getString(path, getSoundName(defaultSound));
+
+            Sound sound = resolveSound(rawName).orElse(defaultSound);
+            if (sound == defaultSound && !matchesDefaultName(rawName, defaultSound)) {
+                warnUnknown(rawName, key, defaultSound);
             }
 
-            float volume = (float) config.getDouble(base + "volume", (float) 1.0);
-            float pitch = (float) config.getDouble(base + "pitch", defaultPitch);
+            float volume = (float) config.getDouble(pathV, 1.0);
+            float pitch  = (float) config.getDouble(pathP, defaultPitch);
+
             return new SoundEffect(enabled, sound, volume, pitch);
+        }
+
+        /** Resolve a sound by modern NamespacedKey, then by legacy enum-style name. */
+        private static Optional<Sound> resolveSound(String input) {
+            if (input == null || input.isBlank()) return Optional.empty();
+
+            String name = input.trim();
+
+            Sound modern = resolveByKey(name);
+            if (modern != null) return Optional.of(modern);
+
+            Sound legacy = resolveByLegacyName(name);
+            if (legacy != null) return Optional.of(legacy);
+
+            return Optional.empty();
+        }
+
+        /** "entity.item.pickup" or "minecraft:entity.item.pickup" -> Sound. */
+        private static Sound resolveByKey(String name) {
+            try {
+                String cleaned = name.toLowerCase(Locale.ROOT);
+                NamespacedKey key = NamespacedKey.fromString(cleaned);
+                if (key == null && !cleaned.contains(":")) {
+                    key = NamespacedKey.minecraft(cleaned);
+                }
+                return key == null ? null : Registry.SOUNDS.get(key);
+            } catch (Exception ignored) {
+                return null;
+            }
+        }
+
+        /** "ENTITY_ITEM_PICKUP" -> Sound, by converting registry keys to upper-snake. */
+        private static Sound resolveByLegacyName(String name) {
+            for (Sound s : Registry.SOUNDS) {
+                NamespacedKey k = Registry.SOUNDS.getKey(s);
+                if (k == null) continue;
+                String legacy = k.getKey().replace('.', '_').toUpperCase(Locale.ROOT);
+                if (legacy.equalsIgnoreCase(name)) return s;
+            }
+            return null;
+        }
+
+        private static boolean matchesDefaultName(String input, Sound defaultSound) {
+            if (input == null) return false;
+            return input.trim().equalsIgnoreCase(getSoundName(defaultSound));
+        }
+
+        private static void warnUnknown(String input, String key, Sound fallback) {
+            Bukkit.getLogger().warning("[Replenish] Unknown sound '" + input
+                    + "' for sounds." + key + ".sound - falling back to "
+                    + getSoundName(fallback));
+        }
+
+        private static String getSoundName(Sound sound) {
+            NamespacedKey key = Registry.SOUNDS.getKey(sound);
+            return (key != null) ? key.getKey() : "unknown";
         }
 
         private static Map<Material, Boolean> readCrops(FileConfiguration config) {
             Map<Material, Boolean> map = defaultCrops();
-            map.put(Material.WHEAT, config.getBoolean("crops.wheat", true));
-            map.put(Material.CARROTS, config.getBoolean("crops.carrots", true));
-            map.put(Material.POTATOES, config.getBoolean("crops.potatoes", true));
+            map.put(Material.WHEAT,       config.getBoolean("crops.wheat",       true));
+            map.put(Material.CARROTS,     config.getBoolean("crops.carrots",     true));
+            map.put(Material.POTATOES,    config.getBoolean("crops.potatoes",    true));
             map.put(Material.NETHER_WART, config.getBoolean("crops.nether_wart", true));
-            map.put(Material.COCOA, config.getBoolean("crops.cocoa", true));
-            map.put(Material.BEETROOTS, config.getBoolean("crops.beetroots", true));
+            map.put(Material.COCOA,       config.getBoolean("crops.cocoa",       true));
+            map.put(Material.BEETROOTS,   config.getBoolean("crops.beetroots",   true));
             return map;
         }
 
         private static Map<Material, Boolean> defaultCrops() {
             Map<Material, Boolean> map = new EnumMap<>(Material.class);
-            map.put(Material.WHEAT, true);
-            map.put(Material.CARROTS, true);
-            map.put(Material.POTATOES, true);
+            map.put(Material.WHEAT,       true);
+            map.put(Material.CARROTS,     true);
+            map.put(Material.POTATOES,    true);
             map.put(Material.NETHER_WART, true);
-            map.put(Material.COCOA, true);
-            map.put(Material.BEETROOTS, true);
+            map.put(Material.COCOA,       true);
+            map.put(Material.BEETROOTS,   true);
             return map;
         }
     }

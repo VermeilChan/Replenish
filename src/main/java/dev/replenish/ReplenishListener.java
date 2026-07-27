@@ -1,5 +1,6 @@
 package dev.replenish;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -28,24 +29,18 @@ import java.util.*;
 
 public class ReplenishListener implements Listener {
 
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+
     private static final long INVALIDATION_COOLDOWN_MS = 50L;
-    private static final long MESSAGE_COOLDOWN_MS = 2000L;
+    private static final long MESSAGE_COOLDOWN_MS      = 2000L;
 
     private static final Set<Material> SUPPORTED_CROPS = EnumSet.of(
-            Material.WHEAT,
-            Material.CARROTS,
-            Material.POTATOES,
-            Material.NETHER_WART,
-            Material.COCOA,
-            Material.BEETROOTS);
+            Material.WHEAT, Material.CARROTS, Material.POTATOES,
+            Material.NETHER_WART, Material.COCOA, Material.BEETROOTS);
 
     private static final Set<Material> SEED_TYPES = EnumSet.of(
-            Material.WHEAT_SEEDS,
-            Material.CARROT,
-            Material.POTATO,
-            Material.NETHER_WART,
-            Material.COCOA_BEANS,
-            Material.BEETROOT_SEEDS);
+            Material.WHEAT_SEEDS, Material.CARROT, Material.POTATO,
+            Material.NETHER_WART, Material.COCOA_BEANS, Material.BEETROOT_SEEDS);
 
     private static final BlockFace[] HORIZONTAL_FACES = {
             BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
@@ -68,36 +63,24 @@ public class ReplenishListener implements Listener {
 
     private static Set<Material> buildHoeTools() {
         Set<Material> set = EnumSet.of(
-                Material.WOODEN_HOE,
-                Material.STONE_HOE,
-                Material.IRON_HOE,
-                Material.GOLDEN_HOE,
-                Material.DIAMOND_HOE,
-                Material.NETHERITE_HOE);
-        if (COPPER_HOE != null) {
-            set.add(COPPER_HOE);
-        }
+                Material.WOODEN_HOE, Material.STONE_HOE, Material.IRON_HOE,
+                Material.GOLDEN_HOE, Material.DIAMOND_HOE, Material.NETHERITE_HOE);
+        if (COPPER_HOE != null) set.add(COPPER_HOE);
         return set;
     }
 
     private static Set<Material> buildAxeTools() {
         Set<Material> set = EnumSet.of(
-                Material.WOODEN_AXE,
-                Material.STONE_AXE,
-                Material.IRON_AXE,
-                Material.GOLDEN_AXE,
-                Material.DIAMOND_AXE,
-                Material.NETHERITE_AXE);
-        if (COPPER_AXE != null) {
-            set.add(COPPER_AXE);
-        }
+                Material.WOODEN_AXE, Material.STONE_AXE, Material.IRON_AXE,
+                Material.GOLDEN_AXE, Material.DIAMOND_AXE, Material.NETHERITE_AXE);
+        if (COPPER_AXE != null) set.add(COPPER_AXE);
         return set;
     }
 
     public ReplenishListener(ReplenishPlugin plugin, AgeMetaRegistry ageMetaRegistry) {
         this.plugin = plugin;
         this.lastInvalidation = new HashMap<>();
-        this.messageCooldown = new HashMap<>();
+        this.messageCooldown  = new HashMap<>();
 
         this.maxAges = new EnumMap<>(Material.class);
         for (Material crop : SUPPORTED_CROPS) {
@@ -106,7 +89,8 @@ public class ReplenishListener implements Listener {
                 maxAges.put(crop, info.maximumAge);
             } else {
                 maxAges.put(crop, 0);
-                plugin.getLogger().warning("Missing CropInfo for " + crop + ", replant may not work correctly");
+                plugin.getLogger().warning(
+                        "Missing CropInfo for " + crop + ", replant may not work correctly");
             }
         }
     }
@@ -116,7 +100,7 @@ public class ReplenishListener implements Listener {
     }
 
     private void invalidateWithCooldown(Player player) {
-        long now = System.currentTimeMillis();
+        long now  = System.currentTimeMillis();
         Long last = lastInvalidation.get(player.getUniqueId());
         if (last == null || (now - last) >= INVALIDATION_COOLDOWN_MS) {
             lastInvalidation.put(player.getUniqueId(), now);
@@ -125,7 +109,7 @@ public class ReplenishListener implements Listener {
     }
 
     private boolean canSendMessage(Player player) {
-        long now = System.currentTimeMillis();
+        long now  = System.currentTimeMillis();
         Long last = messageCooldown.get(player.getUniqueId());
         if (last == null || (now - last) >= MESSAGE_COOLDOWN_MS) {
             messageCooldown.put(player.getUniqueId(), now);
@@ -168,7 +152,7 @@ public class ReplenishListener implements Listener {
     public void onPickup(EntityPickupItemEvent event) {
         if (event.getEntity() instanceof Player player) {
             if (isRelevantSeed(event.getItem().getItemStack())) {
-                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                plugin.getServer().getGlobalRegionScheduler().run(plugin, (task) -> {
                     if (player.isOnline()) invalidateWithCooldown(player);
                 });
             }
@@ -192,7 +176,8 @@ public class ReplenishListener implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        if (player.getGameMode() == GameMode.CREATIVE || player.getGameMode() == GameMode.SPECTATOR) return;
+        if (player.getGameMode() == GameMode.CREATIVE
+                || player.getGameMode() == GameMode.SPECTATOR) return;
         if (player.isSneaking()) return;
 
         ReplenishPlugin.ConfigCache config = plugin.getConfigCache();
@@ -203,8 +188,8 @@ public class ReplenishListener implements Listener {
 
         if (!SUPPORTED_CROPS.contains(cropType) || !plugin.isCropEnabled(cropType)) return;
 
-        ItemStack toolInHand = player.getInventory().getItemInMainHand();
-        Material toolInHandType = toolInHand.getType();
+        ItemStack toolInHand     = player.getInventory().getItemInMainHand();
+        Material  toolInHandType = toolInHand.getType();
 
         boolean hasRequiredTool = false;
         if (cropType == Material.COCOA) {
@@ -221,8 +206,10 @@ public class ReplenishListener implements Listener {
             if (canSendMessage(player)) {
                 String cropName = prettyName(cropType);
                 String toolName = cropType == Material.COCOA ? "Axe" : "Hoe";
-                String msg = config.msgRequiresTool.replace("{crop}", cropName).replace("{tool}", toolName);
-                player.sendMessage(ColorUtils.color(msg));
+                String msg = config.msgRequiresTool
+                        .replace("{crop}", cropName)
+                        .replace("{tool}", toolName);
+                player.sendMessage(MM.deserialize(msg));
                 config.soundDeniedTool.play(player);
             }
             return;
@@ -245,9 +232,9 @@ public class ReplenishListener implements Listener {
         int maxAge = maxAges.getOrDefault(cropType, 0);
         if (maxAge <= 0) return;
 
-        int originalAge = ageable.getAge();
+        int originalAge  = ageable.getAge();
         boolean wasMature = originalAge >= maxAge;
-        int replantedAge = wasMature ? 0 : originalAge;
+        int replantedAge  = wasMature ? 0 : originalAge;
 
         Material seedMaterial = seedFor(cropType);
 
@@ -256,8 +243,10 @@ public class ReplenishListener implements Listener {
             if (!SeedIndex.consume(player, seedMaterial)) {
                 if (canSendMessage(player)) {
                     String seedName = prettyName(seedMaterial);
-                    String msg = config.msgNeedSeed.replace("{count}", "1").replace("{seed}", seedName);
-                    player.sendMessage(ColorUtils.color(msg));
+                    String msg = config.msgNeedSeed
+                            .replace("{count}", "1")
+                            .replace("{seed}", seedName);
+                    player.sendMessage(MM.deserialize(msg));
                     config.soundDeniedSeed.play(player);
                 }
                 return;
@@ -265,7 +254,8 @@ public class ReplenishListener implements Listener {
         }
 
         event.setDropItems(false);
-        Collection<ItemStack> drops = wasMature ? block.getDrops(toolInHand, player) : Collections.emptyList();
+        Collection<ItemStack> drops =
+                wasMature ? block.getDrops(toolInHand, player) : Collections.emptyList();
 
         BlockFace originalCocoaFacing = null;
         if (cropType == Material.COCOA && originalBlockData instanceof Directional directional) {
@@ -276,9 +266,7 @@ public class ReplenishListener implements Listener {
             Location dropLocation = DropPickupManager.centeredDropLocation(block.getLocation());
             if (config.directPickup) {
                 DropPickupManager.giveToPlayerOrDrop(
-                        player,
-                        dropLocation,
-                        drops,
+                        player, dropLocation, drops,
                         config.msgInventoryFull,
                         config.soundPickup,
                         config.soundInventoryFull);
@@ -306,19 +294,17 @@ public class ReplenishListener implements Listener {
         if (originalFacing != null && isJungle(block.getRelative(originalFacing).getType())) {
             return originalFacing;
         }
-
         BlockFace horizontalFacing = getPlayerHorizontalFace(player);
         if (horizontalFacing != null && isJungle(block.getRelative(horizontalFacing).getType())) {
             return horizontalFacing;
         }
-
         return findAdjacentJungle(block);
     }
 
     private BlockFace getPlayerHorizontalFace(Player player) {
         float yaw = player.getLocation().getYaw();
         float normalized = (yaw % 360 + 360) % 360;
-        if (normalized < 45 || normalized >= 315) return BlockFace.SOUTH;
+        if (normalized < 45  || normalized >= 315) return BlockFace.SOUTH;
         if (normalized < 135) return BlockFace.WEST;
         if (normalized < 225) return BlockFace.NORTH;
         return BlockFace.EAST;
@@ -336,12 +322,12 @@ public class ReplenishListener implements Listener {
     }
 
     private static Material seedFor(Material crop) {
-        if (crop == Material.WHEAT) return Material.WHEAT_SEEDS;
-        if (crop == Material.CARROTS) return Material.CARROT;
-        if (crop == Material.POTATOES) return Material.POTATO;
+        if (crop == Material.WHEAT)       return Material.WHEAT_SEEDS;
+        if (crop == Material.CARROTS)     return Material.CARROT;
+        if (crop == Material.POTATOES)    return Material.POTATO;
         if (crop == Material.NETHER_WART) return Material.NETHER_WART;
-        if (crop == Material.COCOA) return Material.COCOA_BEANS;
-        if (crop == Material.BEETROOTS) return Material.BEETROOT_SEEDS;
+        if (crop == Material.COCOA)       return Material.COCOA_BEANS;
+        if (crop == Material.BEETROOTS)   return Material.BEETROOT_SEEDS;
         return null;
     }
 

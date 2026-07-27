@@ -1,12 +1,12 @@
 # ============================================
-#         REPLENISH CONFIG
+#         REPLENISHPLUSPLUS CONFIG
 # ============================================
 
 # --------------------------
 # GENERAL SETTINGS
 # --------------------------
 
-config-version: 5              # DON'T TOUCH THIS!!!
+config-version: 6              # DON'T TOUCH THIS!!!
 
 enabled: true                  # master switch: false disables all replanting globally
 requirePlayerSeed: true        # consume 1 seed from inventory on mature harvest
@@ -32,23 +32,20 @@ crops:
   beetroots: true
 
 # --------------------------
-# CHAT MESSAGES (customize these)
+# CHAT MESSAGES (MiniMessage format)
 # --------------------------
 # Placeholders: {crop}, {tool}, {seed}, {count}
+# Docs: https://docs.advntr.dev/minimessage/format.html
 
 messages:
-  inventory-full: "&8[&eReplenish&8] &8» &7Your inventory was full, so some items dropped on the ground instead."
-  requires-tool: "&8[&eReplenish&8] &8» &7You need a &e{tool} &7to harvest &e{crop}&7."
-  need-seed: "&8[&eReplenish&8] &8» &7You need &e{count}x {seed} &7in your inventory to replant this."
+  inventory-full: "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>Your inventory was full, so some items dropped on the ground instead."
+  requires-tool: "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>You need a <yellow>{tool} <gray>to harvest <yellow>{crop}<gray>."
+  need-seed: "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>You need <yellow>{count}x {seed} <gray>in your inventory to replant this."
 
 # --------------------------
-# SOUND EFFECTS (customize or disable)
+# SOUND EFFECTS
 # --------------------------
-# Each of the four feedback sounds can be individually enabled/disabled
-# and customized with any Bukkit Sound, volume, and pitch.
-#
-# sound:  Must match a Bukkit Sound enum name (case-insensitive).
-#         Full list: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+# Docs: https://jd.papermc.io/paper/org/bukkit/Sound.html
 #         Invalid names log a warning and fall back to the default.
 # volume: 0.0 (silent) to 1.0 (loudest)
 # pitch:  0.5 (low) to 2.0 (high); 1.0 = normal

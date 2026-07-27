@@ -1,17 +1,10 @@
 name: Replenish
 main: dev.replenish.ReplenishPlugin
 version: "${project.version}"
-api-version: "1.17"
+api-version: "1.20"
 description: "Auto-replants crops with age preservation, Fortune-respecting drops, and direct pickup."
 authors: [ "Mitra-88" ]
 website: https://github.com/Mitra-88/Replenish
-
-commands:
-  replenish:
-    description: Replenish admin command
-    usage: /replenish <toggle|reload|status|version>
-    permission: replenish.use
-    permission-message: "&cYou do not have permission to use this command."
 
 permissions:
   replenish.*:

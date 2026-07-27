@@ -1,5 +1,6 @@
 package dev.replenish;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -10,6 +11,8 @@ import java.util.Collection;
 import java.util.Map;
 
 public final class DropPickupManager {
+
+    private static final MiniMessage MM = MiniMessage.miniMessage();
 
     private DropPickupManager() {}
 
@@ -26,10 +29,10 @@ public final class DropPickupManager {
 
         PlayerInventory inventory = player.getInventory();
         World world = dropLocation.getWorld();
-        boolean anyAdded = false;
+        boolean anyAdded   = false;
         boolean anyDropped = false;
-        Location fallbackLoc = player.getLocation();
-        World fallbackWorld = fallbackLoc.getWorld();
+        Location fallbackLoc   = player.getLocation();
+        World    fallbackWorld = fallbackLoc.getWorld();
 
         for (ItemStack stack : drops) {
             if (stack == null || stack.getAmount() <= 0 || stack.getType().isAir()) continue;
@@ -46,8 +49,7 @@ public final class DropPickupManager {
                     for (ItemStack leftover : leftovers.values()) {
                         if (leftover != null && leftover.getAmount() > 0) {
                             leftoverAmount += leftover.getAmount();
-                            if (world != null
-                                    && world.isChunkLoaded(dropLocation.getBlockX() >> 4, dropLocation.getBlockZ() >> 4)) {
+                            if (world != null && world.isChunkLoaded(dropLocation.getBlockX() >> 4, dropLocation.getBlockZ() >> 4)) {
                                 world.dropItemNaturally(dropLocation, leftover);
                             } else if (fallbackWorld != null) {
                                 fallbackWorld.dropItemNaturally(fallbackLoc, leftover);
@@ -58,8 +60,9 @@ public final class DropPickupManager {
                     if (leftoverAmount < originalAmount) anyAdded = true;
                 }
             } catch (Exception e) {
-                if (world != null
-                        && world.isChunkLoaded(dropLocation.getBlockX() >> 4, dropLocation.getBlockZ() >> 4)) {
+                if (world != null && world.isChunkLoaded(
+                        dropLocation.getBlockX() >> 4,
+                        dropLocation.getBlockZ() >> 4)) {
                     world.dropItemNaturally(dropLocation, stack);
                 } else if (fallbackWorld != null) {
                     fallbackWorld.dropItemNaturally(fallbackLoc, stack);
@@ -69,7 +72,7 @@ public final class DropPickupManager {
         }
 
         if (anyDropped) {
-            player.sendMessage(ColorUtils.color(inventoryFullMessage));
+            player.sendMessage(MM.deserialize(inventoryFullMessage));
             if (inventoryFullSound != null) inventoryFullSound.play(player);
         }
 
@@ -80,11 +83,11 @@ public final class DropPickupManager {
 
     public static Location centeredDropLocation(Location target) {
         if (target == null) return null;
-
         World world = target.getWorld();
         if (world == null) return null;
-
-        return new Location(
-                world, target.getBlockX() + 0.5, target.getBlockY() + 0.5, target.getBlockZ() + 0.5, 0f, 0f);
+        return new Location(world,
+                target.getBlockX() + 0.5,
+                target.getBlockY() + 0.5,
+                target.getBlockZ() + 0.5, 0f, 0f);
     }
 }

@@ -1,5 +1,6 @@
 package dev.replenish;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
@@ -13,29 +14,33 @@ import java.util.regex.Pattern;
 
 public final class UpdateChecker {
 
-    private static final String API_URL = "https://api.github.com/repos/Mitra-88/Replenish/releases/latest";
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+
+    private static final String API_URL      = "https://api.github.com/repos/Mitra-88/Replenish/releases/latest";
     private static final String RELEASES_URL = "https://github.com/Mitra-88/Replenish/releases/latest";
 
-    private static final Pattern TAG_PATTERN = Pattern.compile("\"tag_name\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern TAG_PATTERN =
+            Pattern.compile("\"tag_name\"\\s*:\\s*\"([^\"]+)\"");
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(4))
             .build();
 
-    private static final String PREFIX = "&8[&eReplenish&8] &8» &7";
+    private static final String PREFIX = "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>";
     private static final String USER_AGENT =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36";
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                    + "(KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36";
 
-    private final String currentVersion;
+    private final String  currentVersion;
     private final boolean enabled;
 
-    private volatile String latestVersion = "Unknown";
+    private volatile String  latestVersion   = "Unknown";
     private volatile boolean updateAvailable = false;
-    private volatile boolean checkCompleted = false;
+    private volatile boolean checkCompleted  = false;
 
     public UpdateChecker(Plugin plugin, boolean enabled) {
         this.enabled = enabled;
-        this.currentVersion = normalize(plugin.getDescription().getVersion());
+        this.currentVersion = normalize(plugin.getPluginMeta().getVersion());
     }
 
     public void check() {
@@ -52,66 +57,55 @@ public final class UpdateChecker {
         HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenAccept(this::handleResponse)
                 .exceptionally(e -> {
-                    console(PREFIX + "&cUpdate check failed: " + e.getMessage());
+                    console(PREFIX + "<red>Update check failed: " + e.getMessage());
                     return null;
                 });
     }
 
     private void handleResponse(HttpResponse<String> response) {
         if (response.statusCode() == 403) {
-            console(PREFIX + "&cUpdate check failed: GitHub API rate-limited.");
+            console(PREFIX + "<red>Update check failed: GitHub API rate-limited.");
             return;
         }
         if (response.statusCode() == 404) {
-            console(PREFIX + "&cUpdate check failed: No releases found on GitHub.");
+            console(PREFIX + "<red>Update check failed: No releases found on GitHub.");
             return;
         }
         if (response.statusCode() != 200) {
-            console(PREFIX + "&cUpdate check failed: HTTP " + response.statusCode());
+            console(PREFIX + "<red>Update check failed: HTTP " + response.statusCode());
             return;
         }
 
         Matcher matcher = TAG_PATTERN.matcher(response.body());
         if (matcher.find()) {
-            latestVersion = normalize(matcher.group(1));
+            latestVersion   = normalize(matcher.group(1));
             updateAvailable = isNewer(currentVersion, latestVersion);
-            checkCompleted = true;
+            checkCompleted  = true;
             logResult();
         } else {
-            console(PREFIX + "&cUpdate check failed: Malformed GitHub response.");
+            console(PREFIX + "<red>Update check failed: Malformed GitHub response.");
         }
     }
 
     private void logResult() {
         if (updateAvailable) {
-            console(PREFIX + "&7Update available: &e" + latestVersion + " &7(you're on &f" + currentVersion + "&7).");
-            console(PREFIX + "&7Download: &b" + RELEASES_URL);
+            console(PREFIX + "<gray>Update available: <yellow>" + latestVersion
+                    + " <gray>(you're on <white>" + currentVersion + "<gray>).");
+            console(PREFIX + "<gray>Download: <aqua>" + RELEASES_URL);
         } else if (isLocalNewer(currentVersion, latestVersion)) {
-            console(PREFIX + "&7Update Status: &dRunning unreleased/dev build &8(&f" + currentVersion + "&8)");
+            console(PREFIX + "<gray>Update Status: <light_purple>Running unreleased/dev build "
+                    + "<dark_gray>(<white>" + currentVersion + "<dark_gray>)");
         } else {
-            console(PREFIX + "&7Update Status: &aUp to date &8(&f" + currentVersion + "&8)");
+            console(PREFIX + "<gray>Update Status: <green>Up to date "
+                    + "<dark_gray>(<white>" + currentVersion + "<dark_gray>)");
         }
     }
 
-    public boolean isCheckCompleted() {
-        return checkCompleted;
-    }
-
-    public boolean isUpdateAvailable() {
-        return updateAvailable;
-    }
-
-    public String getCurrentVersion() {
-        return currentVersion;
-    }
-
-    public String getLatestVersion() {
-        return latestVersion;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
+    public boolean isCheckCompleted()  { return checkCompleted; }
+    public boolean isUpdateAvailable() { return updateAvailable; }
+    public String  getCurrentVersion() { return currentVersion; }
+    public String  getLatestVersion()  { return latestVersion; }
+    public boolean isEnabled()         { return enabled; }
 
     public boolean isLocalNewer() {
         if (!checkCompleted || latestVersion.equals("Unknown")) return false;
@@ -119,13 +113,14 @@ public final class UpdateChecker {
     }
 
     private void console(String message) {
-        Bukkit.getConsoleSender().sendMessage(ColorUtils.color(message));
+        Bukkit.getConsoleSender().sendMessage(MM.deserialize(message));
     }
 
     private static String normalize(String version) {
         if (version == null) return "";
         String v = version.trim();
-        while (!v.isEmpty() && (v.charAt(0) == 'v' || v.charAt(0) == 'V')) v = v.substring(1);
+        while (!v.isEmpty() && (v.charAt(0) == 'v' || v.charAt(0) == 'V'))
+            v = v.substring(1);
         return v.split("[-+]", 2)[0];
     }
 
