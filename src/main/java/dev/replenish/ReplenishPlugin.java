@@ -262,7 +262,6 @@ public class ReplenishPlugin extends JavaPlugin {
             return new SoundEffect(enabled, sound, volume, pitch);
         }
 
-        /** Resolve a sound by modern NamespacedKey, then by legacy enum-style name. */
         private static Optional<Sound> resolveSound(String input) {
             if (input == null || input.isBlank()) return Optional.empty();
 
@@ -277,7 +276,6 @@ public class ReplenishPlugin extends JavaPlugin {
             return Optional.empty();
         }
 
-        /** "entity.item.pickup" or "minecraft:entity.item.pickup" -> Sound. */
         private static Sound resolveByKey(String name) {
             try {
                 String cleaned = name.toLowerCase(Locale.ROOT);
@@ -291,7 +289,6 @@ public class ReplenishPlugin extends JavaPlugin {
             }
         }
 
-        /** "ENTITY_ITEM_PICKUP" -> Sound, by converting registry keys to upper-snake. */
         private static Sound resolveByLegacyName(String name) {
             for (Sound s : Registry.SOUNDS) {
                 NamespacedKey k = Registry.SOUNDS.getKey(s);

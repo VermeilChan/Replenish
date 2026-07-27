@@ -5,7 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -54,8 +54,7 @@ public class ReplenishCommand extends Command {
     }
 
     @Override
-    public boolean execute(@NonNull CommandSender sender, @NonNull String label, String @NonNull [] args) {
-        // Handle base permission check directly via isDenied()
+    public boolean execute(@NotNull CommandSender sender, @NotNull String label, String [] args) {
         if (isDenied(sender, "replenish.use")) return true;
 
         if (args.length == 0) {
@@ -75,8 +74,6 @@ public class ReplenishCommand extends Command {
         return true;
     }
 
-    // ── main menu ──────────────────────────────────────────────
-
     private void sendMainMenu(CommandSender sender) {
         send(sender, "");
         send(sender, "<dark_gray><strikethrough>      [ <yellow><bold>Replenish <gray>v"
@@ -91,8 +88,6 @@ public class ReplenishCommand extends Command {
         send(sender, "");
         send(sender, LINE);
     }
-
-    // ── help ───────────────────────────────────────────────────
 
     private void handleHelp(CommandSender sender) {
         if (isDenied(sender, "replenish.use")) return;
@@ -119,8 +114,6 @@ public class ReplenishCommand extends Command {
         send(sender, LINE);
     }
 
-    // ── toggle ─────────────────────────────────────────────────
-
     private void handleToggle(CommandSender sender) {
         if (isDenied(sender, "replenish.toggle")) return;
 
@@ -135,8 +128,6 @@ public class ReplenishCommand extends Command {
                 : "Crops will no longer replant. Harvests behave like vanilla.";
         sendPrefixed(sender, "Replenish is now " + state + "<gray>. " + detail);
     }
-
-    // ── reload ─────────────────────────────────────────────────
 
     private void handleReload(CommandSender sender) {
         if (isDenied(sender, "replenish.reload")) return;
@@ -161,8 +152,6 @@ public class ReplenishCommand extends Command {
         send(sender, "");
         send(sender, LINE);
     }
-
-    // ── status ─────────────────────────────────────────────────
 
     private void handleStatus(CommandSender sender) {
         if (isDenied(sender, "replenish.status")) return;
@@ -213,8 +202,6 @@ public class ReplenishCommand extends Command {
         send(sender, LINE);
     }
 
-    // ── version ────────────────────────────────────────────────
-
     private void handleVersion(CommandSender sender) {
         if (isDenied(sender, "replenish.version")) return;
 
@@ -251,8 +238,6 @@ public class ReplenishCommand extends Command {
         send(sender, LINE);
     }
 
-    // ── helpers ────────────────────────────────────────────────
-
     private void appendCropLine(CommandSender sender, Material material, String displayName) {
         boolean on = plugin.isCropEnabled(material);
         send(sender, "  " + (on ? "<green>✔" : "<red>✖") + " <gray>" + displayName);
@@ -283,10 +268,8 @@ public class ReplenishCommand extends Command {
         return n;
     }
 
-    // ── tab complete ───────────────────────────────────────────
-
     @Override
-    public @NonNull List<String> tabComplete(@NonNull CommandSender sender, @NonNull String alias, String[] args) {
+    public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, String[] args) {
         if (args.length == 1) {
             String prefix = args[0].toLowerCase(Locale.ROOT);
             List<String> allowed = new ArrayList<>(5);
