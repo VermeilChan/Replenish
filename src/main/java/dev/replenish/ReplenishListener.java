@@ -152,7 +152,7 @@ public class ReplenishListener implements Listener {
     public void onPickup(EntityPickupItemEvent event) {
         if (event.getEntity() instanceof Player player) {
             if (isRelevantSeed(event.getItem().getItemStack())) {
-                plugin.getServer().getGlobalRegionScheduler().run(plugin, (task) -> {
+                plugin.getServer().getGlobalRegionScheduler().run(plugin, (_) -> {
                     if (player.isOnline()) invalidateWithCooldown(player);
                 });
             }

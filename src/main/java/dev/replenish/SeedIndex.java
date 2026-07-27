@@ -35,7 +35,7 @@ public final class SeedIndex {
 
         PlayerInventory inventory = player.getInventory();
         UUID uuid = player.getUniqueId();
-        Map<Material, Integer> playerCache = cacheByPlayer.computeIfAbsent(uuid, k -> buildIndex(inventory));
+        Map<Material, Integer> playerCache = cacheByPlayer.computeIfAbsent(uuid, _ -> buildIndex(inventory));
 
         Integer cachedSlot = playerCache.get(seedMaterial);
 

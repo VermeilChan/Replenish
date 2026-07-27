@@ -21,7 +21,7 @@ public final class WarningThrottle {
 
     public static synchronized void log(
             Plugin plugin, Level level, String category, String formattedMessage) {
-        State state = STATES.computeIfAbsent(category, k -> new State());
+        State state = STATES.computeIfAbsent(category, _ -> new State());
 
         long now = System.currentTimeMillis();
         if (category.equals(state.lastCategory)) {

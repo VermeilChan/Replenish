@@ -6,10 +6,10 @@ import org.bukkit.Registry;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.*;
 
-@SuppressWarnings("UnstableApiUsage")
 public class ReplenishCommand extends Command {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -55,7 +55,7 @@ public class ReplenishCommand extends Command {
     }
 
     @Override
-    public boolean execute(@NotNull CommandSender sender, @NotNull String label, String [] args) {
+    public boolean execute(@NotNull CommandSender sender, @NotNull String label, String @NonNull [] args) {
         if (isDenied(sender, "replenish.use")) return true;
 
         if (args.length == 0) {
