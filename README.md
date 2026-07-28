@@ -37,21 +37,21 @@ Auto-replant plugin for Paper/Purpur. You break a crop, it goes back in the grou
 
 ## Commands & permissions
 
-| Command              | What it does     |
-|----------------------|------------------|
-| `/replenish status`  | Current settings |
-| `/replenish version` | Plugin version   |
-| `/replenish toggle`  | On/off switch    |
-| `/replenish reload`  | Reload config    |
+| Command                      | What it does     |
+|------------------------------|------------------|
+| `/replenishplusplus status`  | Current settings |
+| `/replenishplusplus version` | Plugin version   |
+| `/replenishplusplus toggle`  | On/off switch    |
+| `/replenishplusplus reload`  | Reload config    |
 
 Permissions:
 
-- `replenish.status` - everyone
-- `replenish.version` - everyone
-- `replenish.use` - op
-- `replenish.toggle` - op
-- `replenish.reload` - op
-- `replenish.*` - op
+- `replenishplusplus.status` - everyone
+- `replenishplusplus.version` - everyone
+- `replenishplusplus.use` - op
+- `replenishplusplus.toggle` - op
+- `replenishplusplus.reload` - op
+- `replenishplusplus.*` - op
 
 ## Config
 
