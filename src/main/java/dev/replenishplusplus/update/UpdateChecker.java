@@ -16,8 +16,8 @@ public final class UpdateChecker {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
 
-    private static final String API_URL      = "https://api.github.com/repos/Mitra-88/Replenish/releases/latest";
-    private static final String RELEASES_URL = "https://github.com/Mitra-88/Replenish/releases/latest";
+    private static final String API_URL      = "https://api.github.com/repos/Mitra-88/ReplenishPlusPlus/releases/latest";
+    private static final String RELEASES_URL = "https://github.com/Mitra-88/ReplenishPlusPlus/releases/latest";
 
     private static final Pattern TAG_PATTERN =
             Pattern.compile("\"tag_name\"\\s*:\\s*\"([^\"]+)\"");
@@ -28,8 +28,7 @@ public final class UpdateChecker {
 
     private static final String PREFIX = "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>";
     private static final String USER_AGENT =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                    + "(KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36";
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " + "(KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36";
 
     private final String  currentVersion;
     private final boolean enabled;

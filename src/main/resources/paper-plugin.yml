@@ -5,6 +5,7 @@ api-version: "26.2"
 description: "Auto-replant plugin for Paper/Purpur. You break a crop, it goes back in the ground. That's basically it. Stole the idea from Hypixel's Replenish because I got tired of replanting by hand."
 authors: [ "Mitra-88" ]
 website: "https://github.com/Mitra-88/ReplenishPlusPlus"
+folia-supported: true
 
 permissions:
   replenishplusplus.*:

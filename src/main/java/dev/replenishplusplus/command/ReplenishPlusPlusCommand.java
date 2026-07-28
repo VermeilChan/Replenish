@@ -47,8 +47,7 @@ public final class ReplenishPlusPlusCommand {
         CommandSender sender = source.getSender();
         if (!sender.hasPermission(permission)) {
             send(sender, Messages.PREFIX + Messages.ARROW
-                    + "<red>You don't have permission to do that. "
-                    + "<dark_gray>(<gray>requires " + permission + "<dark_gray>)");
+                    + "<red>You don't have permission to do that. " + "<dark_gray>(<gray>requires " + permission + "<dark_gray>)");
             return 0;
         }
         action.accept(sender);
@@ -191,11 +190,15 @@ public final class ReplenishPlusPlusCommand {
         } else if (uc.isUpdateAvailable()) {
             send(sender, "  " + Messages.DOT + "<yellow>A new version is available! <dark_gray>(<white>v"
                     + uc.getCurrentVersion() + " <gray>➟ <yellow>v" + uc.getLatestVersion() + "<dark_gray>)");
-            send(sender, "  " + Messages.DOT + "<gray>Get it here: <aqua>https://github.com/Mitra-88/ReplenishPlusPlus/releases/latest");
+            send(sender, "  " + Messages.DOT +
+                    "<gray>Download: <aqua><click:open_url:'https://github.com/Mitra-88/ReplenishPlusPlus/releases/latest'><hover:show_text:'<gray>Click to open release page'><u>github.com/Mitra-88/ReplenishPlusPlus</u></click>");
         } else if (uc.isLocalNewer()) {
-            send(sender, "  " + Messages.DOT + "<light_purple>You're on a development build <dark_gray>(<white>v"
-                    + uc.getCurrentVersion() + "<dark_gray>, newer than the latest release <gray>v"
-                    + uc.getLatestVersion() + "<dark_gray>)");
+            send(sender,
+                    "  " + Messages.DOT
+                            + "<light_purple>You're using a development build\n"
+                            + "    <dark_gray>• <gray>Current: <white>v" + uc.getCurrentVersion() + "\n"
+                            + "    <dark_gray>• <gray>Latest release: <white>v" + uc.getLatestVersion() + "\n"
+                            + "    <dark_gray>• <light_purple>Your build is newer than the latest public release.");
         } else {
             send(sender, "  " + Messages.DOT + "<green>You're up to date! <dark_gray>(<white>v"
                     + uc.getCurrentVersion() + "<dark_gray>)");

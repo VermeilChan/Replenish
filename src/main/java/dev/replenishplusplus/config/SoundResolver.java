@@ -27,8 +27,7 @@ public final class SoundResolver {
         Sound sound = resolved.orElse(defaultSound);
 
         if (resolved.isEmpty() && !matchesName(rawName, defaultSound)) {
-            Bukkit.getLogger().warning("[Replenish] Unknown sound '" + rawName
-                    + "' for sounds." + key + ".sound — falling back to " + nameOf(defaultSound));
+            Bukkit.getLogger().warning("[Replenish] Unknown sound '" + rawName + "' for sounds." + key + ".sound — falling back to " + nameOf(defaultSound));
         }
 
         return new SoundEffect(enabled, sound, volume, pitch);

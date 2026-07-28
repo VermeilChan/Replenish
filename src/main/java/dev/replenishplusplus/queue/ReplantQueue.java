@@ -89,7 +89,7 @@ public final class ReplantQueue {
         if (pendingCount >= maxPoolSize) {
             WarningThrottle.log(plugin, Level.WARNING,
                     WarningThrottle.Category.QUEUE_BACKPRESSURE,
-                    "Replant queue saturated (" + pendingCount + "/" + maxPoolSize + ") — dropping replant at " + LocationUtil.describe(block) + " to prevent unbounded growth.");
+                    "Replant queue saturated (" + pendingCount + "/" + maxPoolSize + ") - dropping replant at " + LocationUtil.describe(block) + " to prevent unbounded growth.");
             return;
         }
 
@@ -143,8 +143,7 @@ public final class ReplantQueue {
             } else if (retryCount(head) >= MAX_UNLOAD_RETRIES) {
                 WarningThrottle.log(plugin, Level.WARNING,
                         WarningThrottle.Category.ABANDONED_REPLANT,
-                        "Abandoning replant at " + LocationUtil.describe(block)
-                                + " — chunk remained unloaded.");
+                        "Abandoning replant at " + LocationUtil.describe(block) + " - chunk remained unloaded.");
                 release(head);
                 processed++;
             } else {
@@ -237,8 +236,7 @@ public final class ReplantQueue {
     private int clampDelay(int delayTicks, Block block) {
         int delay = Math.max(1, delayTicks);
         if (delay >= WHEEL_SIZE) {
-            WarningThrottle.log(plugin, Level.WARNING,
-                    WarningThrottle.Category.DELAY_TRUNCATION,
+            WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.DELAY_TRUNCATION,
                     "Replant delay truncation triggered for block at " + LocationUtil.describe(block));
             delay = WHEEL_SIZE - 1;
         }

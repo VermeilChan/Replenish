@@ -78,8 +78,6 @@ checkUpdates: true
 # GENERAL SETTINGS
 # --------------------------
 
-config-version: 6              # don't touch this
-
 enabled: true                  # false = no replanting
 requirePlayerSeed: true        # eat 1 seed on mature harvest
 directPickup: true             # drops go to you, not the ground
@@ -88,6 +86,10 @@ replantDelayTicks: 1           # 1 tick = 50ms
 maxReplantsPerTick: 1024      # maximum crops replanted per tick (20 ticks/second)
                               # raise this on beefier servers if replants lag behind
                               # lower it on weaker servers to reduce load
+
+maxReplantsQueued: 4096       # Maximum number of replants that can be queued at once.
+                              # If this limit is exceeded (e.g. mass crop trampling), new replants are dropped
+                              # to prevent unbounded memory growth. Must be at least 256.
 
 checkUpdates: true             # check GitHub for new releases on server startup
 

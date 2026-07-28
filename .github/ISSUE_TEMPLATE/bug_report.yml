@@ -1,43 +1,38 @@
 name: "Bug Report"
-description: "Help us fix an issue with Replenish"
+description: "Something's broken. Tell me what."
 labels:
   - "bug"
 body:
   - type: markdown
     attributes:
       value: |
-        👋 **Hey there! Thanks for taking the time to report a bug.**
-        
-        Before we dive in, please double-check [the issue tracker](https://github.com/Mitra-88/Replenish/issues) to make sure someone else hasn't already reported the same thing. If they have, feel free to add your thoughts to that thread instead!
-        
-        The more details you give me below, the faster I can squash this bug. Let's get started!
+        Check [the issue tracker](https://github.com/Mitra-88/ReplenishPlusPlus/issues) first. If someone already reported it, comment there instead of opening a duplicate.
 
   - type: markdown
     attributes:
       value: |
         ---
-        ### 🌾 What happened?
+        ### What happened?
 
   - type: textarea
     id: "what-happened"
     attributes:
       label: "Describe the bug"
       description: |
-        In your own words, tell me what went wrong. What did you expect to happen? 
-        Please give us clear step-by-step instructions on how to trigger the bug.
+        What went wrong, what you expected instead, and how to reproduce it. Steps matter - "it doesn't work" doesn't help me.
       placeholder: |
-        1. I planted a crop...
-        2. I waited for it to fully grow...
-        3. I broke it with my tool...
-        4. The crop didn't replant, and I expected it to!
+        1. Planted wheat on farmland
+        2. Waited for full growth
+        3. Broke it with a diamond hoe
+        4. Crop did not replant. Expected it to.
     validations:
       required: true
 
   - type: dropdown
     id: "crop-type"
     attributes:
-      label: "Which crop is causing trouble?"
-      description: "Pick the crop that isn't working right. If it's a general issue, pick \"Multiple / All Crops\"."
+      label: "Which crop?"
+      description: "If it's not crop-specific, pick Multiple / All Crops."
       options:
         - "Wheat"
         - "Carrots"
@@ -52,14 +47,13 @@ body:
   - type: dropdown
     id: "tool-used"
     attributes:
-      label: "What tool were you holding?"
-      description: |
-        Replenish requires specific tools to trigger replanting (Hoes for crops, Axes for Cocoa).
+      label: "What were you holding?"
+      description: "Hoes trigger crops, Axes trigger Cocoa. Bare hands trigger nothing."
       options:
         - "Hoe (Wood, Stone, Copper, Iron, Gold, Diamond, Netherite)"
         - "Axe (Wood, Stone, Copper, Iron, Gold, Diamond, Netherite)"
-        - "Just my bare hands"
-        - "Another tool entirely"
+        - "Bare hands"
+        - "Something else"
     validations:
       required: true
 
@@ -67,40 +61,37 @@ body:
     attributes:
       value: |
         ---
-        ### 💻 About your server
-        
-        I need a few technical details to figure out if this is a version-specific issue.
+        ### Server info
 
   - type: dropdown
     id: "server-software"
     attributes:
-      label: "Server Software"
-      description: "What server software are you running?"
+      label: "Server software"
       options:
-        - "Spigot"
         - "PaperMC"
         - "Purpur"
         - "Leaf"
         - "Pufferfish"
-        - "Other (Please mention in Additional Context)"
+        - "Folia"
+        - "Other (mention it in Additional Context)"
     validations:
       required: true
 
   - type: input
     id: "server-version"
     attributes:
-      label: "Minecraft Version"
-      description: "Run the `/version` or `/about` command in your server console and paste the exact output here."
-      placeholder: "ex. This server is running Paper version 26.2-2607-HEAD@fc3c961 (MC: 26.2)"
+      label: "Minecraft version"
+      description: "Run `/version` in console. Paste the full output, not just the number."
+      placeholder: "This server is running Paper version 26.2-2607-HEAD@fc3c961 (MC: 26.2)"
     validations:
       required: true
 
   - type: input
     id: "plugin-version"
     attributes:
-      label: "Replenish Version"
-      description: "What version of Replenish are you using? You can find this by typing `/replenish version` in-game or in your console."
-      placeholder: "ex. v5.4.0"
+      label: "Replenish version"
+      description: "`/replenish version` in-game or console."
+      placeholder: "v5.4.0"
     validations:
       required: true
 
@@ -108,51 +99,47 @@ body:
     attributes:
       value: |
         ---
-        ### ⚙️ Your Settings & Logs
+        ### Config & logs
 
   - type: dropdown
     id: "config-settings"
     attributes:
-      label: "Plugin Settings"
-      description: |
-        How do you have Replenish configured? 
-        Do players need seeds in their inventory, and do items go straight to their inventory?
+      label: "How is Replenish configured?"
       options:
-        - "Defaults (Seeds required + Direct pickup to inventory)"
-        - "Seeds required, but items drop on the ground"
-        - "Seeds NOT required, items go to inventory"
-        - "Seeds NOT required, items drop on the ground"
-        - "I haven't changed the config (Defaults)"
+        - "Defaults (seeds required + direct pickup)"
+        - "Seeds required, drops on ground"
+        - "No seeds required, direct pickup"
+        - "No seeds required, drops on ground"
+        - "Haven't touched the config"
     validations:
       required: true
 
   - type: textarea
     id: "logs"
     attributes:
-      label: "Console Errors / Logs"
+      label: "Console errors / logs"
       description: |
-        If the server spat out an error in the console when the bug happened, I need to see it! 
-        **Please don't paste massive walls of text directly here.** Copy your log, paste it into a site like [mclo.gs](https://mclo.gs/) or [Pastebin](https://pastebin.com/), and share the link with me. 
-        If there was absolutely no error in the console, just type "No errors in console".
-      placeholder: "Paste your mclo.gs link here..."
+        If there's a stack trace or error in console, I need it. Don't paste 400 lines here — use [mclo.gs](https://mclo.gs/) or [Pastebin](https://pastebin.com/) and drop the link.
+        No errors? Just write "none".
+      placeholder: "https://mclo.gs/..."
     validations:
       required: true
 
   - type: textarea
     id: "plugins"
     attributes:
-      label: "Other Plugins"
+      label: "Other plugins"
       description: |
-        Does your server have any other plugins that might mess with farming, block breaking, or inventory? (Like mcMMO, anti-cheats, Essentials, etc.)
-        Listing them helps rule out conflicts. Note: Conflicts between plugins will not be fixed, and the issue will be closed.
-      placeholder: "ex. EssentialsX, mcMMO, NoCheatPlus, Aurelium Skills..."
+        Anything that touches farming, block breaking, or inventories? mcMMO, anti-cheats, Essentials, etc. Helps rule out conflicts.
+        Note: if it turns out to be a conflict with another plugin, the issue gets closed.
+      placeholder: "EssentialsX, mcMMO, NoCheatPlus..."
     validations:
       required: false
 
   - type: textarea
     id: "additional-context"
     attributes:
-      label: "Anything else?"
-      description: "Got a screenshot? A video link? Or maybe just some extra context about what was happening when the bug occurred? Drop it all here!"
+      label: "Anything else"
+      description: "Screenshots, video, extra context. Whatever helps."
     validations:
       required: false
