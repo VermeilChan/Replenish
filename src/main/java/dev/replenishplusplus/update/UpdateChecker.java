@@ -30,6 +30,7 @@ public final class UpdateChecker {
     private static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " + "(KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36";
 
+    private final Plugin plugin;
     private final String  currentVersion;
     private final boolean enabled;
 
@@ -38,6 +39,7 @@ public final class UpdateChecker {
     private volatile boolean checkCompleted  = false;
 
     public UpdateChecker(Plugin plugin, boolean enabled) {
+        this.plugin = plugin;
         this.enabled = enabled;
         this.currentVersion = normalize(plugin.getPluginMeta().getVersion());
     }
@@ -114,7 +116,9 @@ public final class UpdateChecker {
     }
 
     private void console(String message) {
-        Bukkit.getConsoleSender().sendMessage(MINI_MESSAGE.deserialize(message));
+        plugin.getServer().getGlobalRegionScheduler().execute(plugin, () ->
+                Bukkit.getConsoleSender().sendMessage(MINI_MESSAGE.deserialize(message))
+        );
     }
 
     private static String normalize(String version) {

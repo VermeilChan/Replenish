@@ -107,9 +107,7 @@ public final class ReplenishPlusPlusListener implements Listener {
     public void onPickupItem(EntityPickupItemEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (!isRelevantSeed(event.getItem().getItemStack())) return;
-        plugin.getServer().getGlobalRegionScheduler().run(plugin, _ -> {
-            if (player.isOnline()) invalidateWithCooldown(player);
-        });
+        invalidateWithCooldown(player);
     }
 
     @EventHandler

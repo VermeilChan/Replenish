@@ -8,6 +8,7 @@ import dev.replenishplusplus.crop.SimpleCropInfo;
 import dev.replenishplusplus.util.LocationUtil;
 import dev.replenishplusplus.util.WarningThrottle;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -172,52 +173,56 @@ public final class ReplantQueue {
     private boolean tryReplant(int index, Block block) {
         if (!isChunkLoaded(block)) return false;
 
-        try {
-            Material material = poolMaterials[index];
-            if (material == null) return true;
+        Material material = poolMaterials[index];
+        if (material == null) return true;
 
-            CropInfo info = ageMetaRegistry.get(material);
-            switch (info) {
-                case null -> {
-                    WarningThrottle.log(plugin, Level.WARNING,
-                            WarningThrottle.Category.AGE_DATA_MISSING,
-                            "No age data found for plant: " + material + ", skipping replant at " + LocationUtil.describe(block));
-                    return true;
+        CropInfo info = ageMetaRegistry.get(material);
+        if (info == null) {
+            WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.AGE_DATA_MISSING,
+                    "No age data found for plant: " + material + ", skipping replant at " + LocationUtil.describe(block));
+            return true;
+        }
+
+        int metadata = poolMeta[index];
+        int targetAge = metadata & AGE_MASK;
+        int faceOrdinal = (metadata >>> FACE_SHIFT) & FACE_MASK;
+        Location loc = block.getLocation();
+
+        Runnable action = () -> {
+            try {
+                switch (info) {
+                    case CocoaCropInfo cocoa -> replantCocoa(block, cocoa, targetAge, faceOrdinal);
+                    case SimpleCropInfo simple -> replantNormal(block, simple, targetAge);
+                    default -> {}
                 }
-                case CocoaCropInfo cocoa -> replantCocoa(index, block, cocoa);
-                case SimpleCropInfo simple -> replantNormal(index, block, simple);
-                default -> {
-                }
+            } catch (Exception e) {
+                WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.REPLANT_FAILED,
+                        "Failed to replant crop at " + LocationUtil.describe(block) + ": " + e.getMessage());
             }
+        };
 
-        } catch (Exception e) {
-            WarningThrottle.log(plugin, Level.WARNING,
-                    WarningThrottle.Category.REPLANT_FAILED,
-                    "Failed to replant crop at " + LocationUtil.describe(block) + ": " + e.getMessage());
+        if (plugin.getServer().isOwnedByCurrentRegion(loc)) {
+            action.run();
+        } else {
+            plugin.getServer().getRegionScheduler().execute(plugin, loc, action);
         }
         return true;
     }
 
-    private void replantNormal(int index, Block block, SimpleCropInfo info) {
+    private void replantNormal(Block block, SimpleCropInfo info, int targetAge) {
         if (!block.getType().isAir()) return;
 
         Material below = block.getRelative(BlockFace.DOWN).getType();
         if (info.requiresFarmland() && below != Material.FARMLAND)   return;
         if (info.requiresSoulSand() && below != Material.SOUL_SAND) return;
 
-        int targetAge = poolMeta[index] & AGE_MASK;
         block.setBlockData(info.stateFor(targetAge), false);
     }
 
-    private void replantCocoa(int index, Block block, CocoaCropInfo info) {
+    private void replantCocoa(Block block, CocoaCropInfo info, int targetAge, int faceOrdinal) {
         if (!block.getType().isAir()) return;
-        if (poolMaterials[index] != Material.COCOA) return;
 
-        int metadata    = poolMeta[index];
-        int targetAge   = metadata & AGE_MASK;
-        int faceOrdinal = (metadata >>> FACE_SHIFT) & FACE_MASK;
         BlockFace face  = AgeMetaRegistry.COCOA_FACES.get(faceOrdinal);
-
         Block attached = block.getRelative(face);
         if (!CropAnchors.JUNGLE_LOGS.contains(attached.getType())) return;
 
