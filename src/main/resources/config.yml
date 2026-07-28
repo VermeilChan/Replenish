@@ -6,8 +6,6 @@
 # GENERAL SETTINGS
 # --------------------------
 
-config-version: 7              # don't touch this
-
 enabled: true                  # false = no replanting
 requirePlayerSeed: true        # eat 1 seed on mature harvest
 directPickup: true             # drops go to you, not the ground

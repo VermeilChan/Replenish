@@ -2,7 +2,6 @@ package dev.replenishplusplus;
 
 import dev.replenishplusplus.command.ReplenishPlusPlusCommand;
 import dev.replenishplusplus.config.ConfigCache;
-import dev.replenishplusplus.config.ConfigMigrator;
 import dev.replenishplusplus.config.Messages;
 import dev.replenishplusplus.crop.AgeMetaRegistry;
 import dev.replenishplusplus.crop.CropType;
@@ -72,13 +71,6 @@ public final class ReplenishPlusPlus extends JavaPlugin {
     public void reloadLocalConfig() {
         reloadConfig();
         FileConfiguration config = getConfig();
-
-        boolean migrated = new ConfigMigrator(this, config).migrate();
-
-        if (migrated) {
-            reloadConfig();
-            config = getConfig();
-        }
 
         int delayTicks = Math.max(1, config.getInt("replantDelayTicks", DEFAULT_REPLANT_DELAY_TICKS));
         int maxPerTick = Math.max(MIN_REPLANTS_PER_TICK, config.getInt("maxReplantsPerTick", DEFAULT_MAX_REPLANTS));
