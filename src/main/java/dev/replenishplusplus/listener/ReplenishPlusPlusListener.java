@@ -137,7 +137,7 @@ public final class ReplenishPlusPlusListener implements Listener {
 
     private void handleBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        if (isInCreativeOrSpectator(player) || player.isSneaking()) return;
+        if (isInNonSurvivalMode(player) || player.isSneaking()) return;
 
         ConfigCache config = plugin.getConfigCache();
         if (!config.enabled()) return;
@@ -175,9 +175,9 @@ public final class ReplenishPlusPlusListener implements Listener {
         scheduleReplant(player, block, crop, config, replantedAge, blockData);
     }
 
-    private boolean isInCreativeOrSpectator(Player player) {
+    private boolean isInNonSurvivalMode(Player player) {
         GameMode mode = player.getGameMode();
-        return mode == GameMode.CREATIVE || mode == GameMode.SPECTATOR;
+        return mode == GameMode.CREATIVE || mode == GameMode.SPECTATOR || mode == GameMode.ADVENTURE;
     }
 
     private boolean hasValidAnchor(Block block, CropType crop) {

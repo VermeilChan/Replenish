@@ -111,10 +111,6 @@ public final class ReplenishPlusPlus extends JavaPlugin {
         configCacheRef.updateAndGet(current -> current.withEnabled(enabled));
     }
 
-    public boolean isCropEnabled(Material crop) {
-        return getConfigCache().isCropEnabled(crop);
-    }
-
     public boolean isCropEnabled(CropType crop) {
         return getConfigCache().isCropEnabled(crop);
     }
