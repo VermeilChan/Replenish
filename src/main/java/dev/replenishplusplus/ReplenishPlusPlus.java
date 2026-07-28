@@ -19,6 +19,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
 
 public final class ReplenishPlusPlus extends JavaPlugin {
 
@@ -69,7 +70,13 @@ public final class ReplenishPlusPlus extends JavaPlugin {
     }
 
     public void reloadLocalConfig() {
-        reloadConfig();
+        try {
+            reloadConfig();
+        } catch (Exception e) {
+            getLogger().log(Level.WARNING, "Config reload failed - keeping previous settings", e);
+            return;
+        }
+
         FileConfiguration config = getConfig();
 
         int delayTicks = Math.max(1, config.getInt("replantDelayTicks", DEFAULT_REPLANT_DELAY_TICKS));

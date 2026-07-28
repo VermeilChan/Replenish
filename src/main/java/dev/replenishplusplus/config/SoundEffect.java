@@ -30,6 +30,7 @@ public record SoundEffect(boolean enabled, Sound sound, float volume, float pitc
     }
 
     private static float clamp(float value, float min, float max) {
+        if (Float.isNaN(value)) return min;
         if (value < min) return min;
         return Math.min(value, max);
     }

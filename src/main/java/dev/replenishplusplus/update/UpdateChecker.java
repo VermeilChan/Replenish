@@ -96,7 +96,7 @@ public final class UpdateChecker {
     }
 
     private Void handleError(Throwable error) {
-        console(PREFIX + "<red>Update check failed: " + error.getMessage());
+        console(PREFIX + "<red>Update check failed: <gray>Could not reach GitHub. (Network timeout or blocked connection)");
         return null;
     }
 

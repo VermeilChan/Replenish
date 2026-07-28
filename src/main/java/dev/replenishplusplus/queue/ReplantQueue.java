@@ -62,8 +62,7 @@ public final class ReplantQueue {
     public synchronized void start() {
         if (started) return;
         started = true;
-        scheduledTask = plugin.getServer().getGlobalRegionScheduler()
-                .runAtFixedRate(plugin, _ -> tick(), 1L, 1L);
+        scheduledTask = plugin.getServer().getGlobalRegionScheduler().runAtFixedRate(plugin, _ -> tick(), 1L, 1L);
     }
 
     public synchronized void stop() {
@@ -87,23 +86,27 @@ public final class ReplantQueue {
             Block block, Material material, int delayTicks,
             int targetAge, BlockFace cocoaFacing) {
 
-        if (pendingCount >= maxPoolSize) {
-            WarningThrottle.log(plugin, Level.WARNING,
-                    WarningThrottle.Category.QUEUE_BACKPRESSURE,
-                    "Replant queue saturated (" + pendingCount + "/" + maxPoolSize + ") - dropping replant at " + LocationUtil.describe(block) + " to prevent unbounded growth.");
-            return;
+        try {
+            if (pendingCount >= maxPoolSize) {
+                WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.QUEUE_BACKPRESSURE,
+                        "Replant queue is full (" + pendingCount + "/" + maxPoolSize + "). Dropping replant at " + LocationUtil.describe(block) + " to prevent server lag.");
+                return;
+            }
+
+            int delay = clampDelay(delayTicks, block);
+            int slot  = (cursor + delay) & WHEEL_MASK;
+            int index = acquire();
+
+            poolBlocks[index]    = block;
+            poolMaterials[index] = material;
+            poolMeta[index]      = packMeta(targetAge, cocoaFacing);
+            poolNext[index]      = wheelHeads[slot];
+            wheelHeads[slot]     = index;
+            pendingCount++;
+        } catch (IllegalStateException e) {
+            WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.QUEUE_BACKPRESSURE,
+                    "Replant queue ran out of memory slots. Dropping replant at " + LocationUtil.describe(block) + ".");
         }
-
-        int delay = clampDelay(delayTicks, block);
-        int slot  = (cursor + delay) & WHEEL_MASK;
-        int index = acquire();
-
-        poolBlocks[index]    = block;
-        poolMaterials[index] = material;
-        poolMeta[index]      = packMeta(targetAge, cocoaFacing);
-        poolNext[index]      = wheelHeads[slot];
-        wheelHeads[slot]     = index;
-        pendingCount++;
     }
 
     private synchronized void tick() {
@@ -138,12 +141,20 @@ public final class ReplantQueue {
                 continue;
             }
 
-            if (tryReplant(head, block)) {
+            boolean success;
+            try {
+                success = tryReplant(head, block);
+            } catch (Exception e) {
+                WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.REPLANT_FAILED,
+                        "Tick processing error at " + LocationUtil.describe(block) + ": " + e.getMessage());
+                success = true;
+            }
+
+            if (success) {
                 release(head);
                 processed++;
             } else if (retryCount(head) >= MAX_UNLOAD_RETRIES) {
-                WarningThrottle.log(plugin, Level.WARNING,
-                        WarningThrottle.Category.ABANDONED_REPLANT,
+                WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.ABANDONED_REPLANT,
                         "Abandoning replant at " + LocationUtil.describe(block) + " - chunk remained unloaded.");
                 release(head);
                 processed++;
@@ -284,6 +295,7 @@ public final class ReplantQueue {
     }
 
     private void resetPool() {
+        freeHead = -1;
         for (int i = poolBlocks.length - 1; i >= 0; i--) {
             poolBlocks[i]    = null;
             poolMaterials[i] = null;

@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public final class ReplenishPlusPlusListener implements Listener {
 
@@ -126,6 +127,15 @@ public final class ReplenishPlusPlusListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
+        try {
+            handleBlockBreak(event);
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING,
+                    "Unexpected error during crop break handling for player " + event.getPlayer().getName() + " at " + LocationUtil.describe(event.getBlock()), e);
+        }
+    }
+
+    private void handleBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         if (isInCreativeOrSpectator(player) || player.isSneaking()) return;
 
