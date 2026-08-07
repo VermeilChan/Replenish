@@ -71,8 +71,8 @@ body:
         - "PaperMC"
         - "Purpur"
         - "Leaf"
-        - "Pufferfish"
         - "Folia"
+        - "CanvasMC"
         - "Other (mention it in Additional Context)"
     validations:
       required: true
@@ -82,16 +82,16 @@ body:
     attributes:
       label: "Minecraft version"
       description: "Run `/version` in console. Paste the full output, not just the number."
-      placeholder: "This server is running Paper version 26.2-2607-HEAD@fc3c961 (MC: 26.2)"
+      placeholder: "This server is running Paper version 26.2-102-main@a40947c (2026-08-06T19:05:57Z) (Implementing API version 26.2.build.102-stable)"
     validations:
       required: true
 
   - type: input
     id: "plugin-version"
     attributes:
-      label: "Replenish version"
-      description: "`/replenish version` in-game or console."
-      placeholder: "v5.4.0"
+      label: "Replenish++ version"
+      description: "`/replenishplusplus version` in-game or console."
+      placeholder: "v7.0.0"
     validations:
       required: true
 
@@ -130,8 +130,8 @@ body:
     attributes:
       label: "Other plugins"
       description: |
-        Anything that touches farming, block breaking, or inventories? mcMMO, anti-cheats, Essentials, etc. Helps rule out conflicts.
-        Note: if it turns out to be a conflict with another plugin, the issue gets closed.
+        List anything that touches farming, block breaking, or inventories mcMMO, anti-cheats, Essentials, etc. This helps rule out conflicts.
+        Heads up: I don't fix compatibility issues with other plugins. If yours turns out to be a conflict, I'll close the issue and add the plugin to a known-incompatible list so others can check before reporting the same thing.
       placeholder: "EssentialsX, mcMMO, NoCheatPlus..."
     validations:
       required: false
