@@ -105,11 +105,15 @@ public final class ReplantQueue {
                 Block block = poolBlocks[head];
                 if (block != null) {
                     try {
-                        tryReplant(head, block);
-                        flushed++;
+                        if (tryReplant(head, block)) {
+                            flushed++;
+                        } else {
+                            handleFailureForUnloadedChunk(poolMaterials[head], poolPlayerIds[head], seedWasConsumed(head));
+                        }
                     } catch (Exception e) {
                         WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.REPLANT_FAILED,
                                 "Flush error at " + LocationUtil.describe(block) + ": " + e.getMessage());
+                        handleReplantFailure(block, poolMaterials[head], poolPlayerIds[head], seedWasConsumed(head));
                     }
                 }
                 release(head);
@@ -317,7 +321,7 @@ public final class ReplantQueue {
         if (playerId != null) {
             Player player = plugin.getServer().getPlayer(playerId);
             if (player != null && player.isOnline()) {
-                plugin.getConfigCache().replantFailedSound().play(player);
+                player.getScheduler().execute(plugin, () -> plugin.getConfigCache().replantFailedSound().play(player), null, 1L);
             }
         }
     }
@@ -327,16 +331,17 @@ public final class ReplantQueue {
         Player player = plugin.getServer().getPlayer(playerId);
         if (player == null || !player.isOnline()) return;
 
-        plugin.getConfigCache().replantFailedSound().play(player);
+        player.getScheduler().execute(plugin, () -> {
+            plugin.getConfigCache().replantFailedSound().play(player);
 
-        if (seedConsumed) {
-            CropType crop = CropType.fromMaterial(cropMaterial);
-            if (crop != null) {
-                Location playerLoc = player.getLocation();
-                plugin.getServer().getRegionScheduler().execute(plugin, playerLoc, () ->
-                        player.getWorld().dropItemNaturally(playerLoc, new ItemStack(crop.seed())));
+            if (seedConsumed) {
+                CropType crop = CropType.fromMaterial(cropMaterial);
+                if (crop != null) {
+                    Location playerLoc = player.getLocation();
+                    player.getWorld().dropItemNaturally(playerLoc, new ItemStack(crop.seed()));
+                }
             }
-        }
+        }, null, 1L);
     }
 
     private static boolean isChunkLoaded(Block block) {
