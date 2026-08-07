@@ -38,7 +38,7 @@ public enum CropType {
     public boolean isCocoa()     { return this == COCOA; }
     public boolean isNetherWart() { return this == NETHER_WART; }
 
-    
+
     public static CropType fromMaterial(Material material) {
         return BY_MATERIAL.get(material);
     }
