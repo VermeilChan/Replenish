@@ -12,6 +12,8 @@ public record ConfigCache(
         boolean enabled,
         boolean requirePlayerSeed,
         boolean directPickup,
+        boolean sneakToBypass,
+        MessageStyle messageStyle,
         int replantDelayTicks,
         int maxReplantsPerTick,
         int maxReplantsQueued,
@@ -22,14 +24,11 @@ public record ConfigCache(
         SoundEffect pickupSound,
         SoundEffect inventoryFullSound,
         SoundEffect deniedToolSound,
-        SoundEffect deniedSeedSound) {
+        SoundEffect deniedSeedSound,
+        SoundEffect replantFailedSound) {
 
     public ConfigCache {
         cropEnabled = Map.copyOf(cropEnabled);
-    }
-
-    public boolean isCropEnabled(Material material) {
-        return material != null && cropEnabled.getOrDefault(material, true);
     }
 
     public boolean isCropEnabled(CropType crop) {
@@ -39,14 +38,17 @@ public record ConfigCache(
     public ConfigCache withEnabled(boolean newEnabled) {
         return new ConfigCache(
                 newEnabled, requirePlayerSeed, directPickup,
+                sneakToBypass, messageStyle,
                 replantDelayTicks, maxReplantsPerTick, maxReplantsQueued,
                 cropEnabled, inventoryFullMessage, requiresToolMessage, needSeedMessage,
-                pickupSound, inventoryFullSound, deniedToolSound, deniedSeedSound);
+                pickupSound, inventoryFullSound, deniedToolSound, deniedSeedSound,
+                replantFailedSound);
     }
 
     public static ConfigCache defaults() {
         return new ConfigCache(
-                true, true, true, 1, 1024, 4096,
+                true, true, true, true, MessageStyle.CHAT,
+                1, 1024, 4096,
                 defaultCropToggles(),
                 Messages.INVENTORY_FULL_DEFAULT,
                 Messages.REQUIRES_TOOL_DEFAULT,
@@ -54,14 +56,17 @@ public record ConfigCache(
                 new SoundEffect(true, Sound.ENTITY_ITEM_PICKUP,    1.0f, 1.0f),
                 new SoundEffect(true, Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f),
                 new SoundEffect(true, Sound.ENTITY_VILLAGER_NO,    1.0f, 0.5f),
-                new SoundEffect(true, Sound.ENTITY_VILLAGER_NO,    1.0f, 0.5f));
+                new SoundEffect(true, Sound.ENTITY_VILLAGER_NO,    1.0f, 0.5f),
+                new SoundEffect(true, Sound.ENTITY_ITEM_BREAK,     0.5f, 1.0f));
     }
 
     public static ConfigCache from(FileConfiguration config, int delayTicks, int maxPerTick, int maxQueued) {
         return new ConfigCache(
-                config.getBoolean("enabled",            true),
-                config.getBoolean("requirePlayerSeed",  true),
-                config.getBoolean("directPickup",       true),
+                config.getBoolean("enabled",               true),
+                config.getBoolean("requirePlayerSeed",     true),
+                config.getBoolean("directPickup",          true),
+                config.getBoolean("sneakToBypass",         true),
+                MessageStyle.from(config.getString("messageStyle", "CHAT")),
                 delayTicks,
                 maxPerTick,
                 maxQueued,
@@ -72,7 +77,8 @@ public record ConfigCache(
                 SoundResolver.read(config, "pickup",         Sound.ENTITY_ITEM_PICKUP,    1.0f),
                 SoundResolver.read(config, "inventory-full", Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f),
                 SoundResolver.read(config, "denied-tool",    Sound.ENTITY_VILLAGER_NO,    0.5f),
-                SoundResolver.read(config, "denied-seed",    Sound.ENTITY_VILLAGER_NO,    0.5f));
+                SoundResolver.read(config, "denied-seed",    Sound.ENTITY_VILLAGER_NO,    0.5f),
+                SoundResolver.read(config, "replant-failed", Sound.ENTITY_ITEM_BREAK,     1.0f));
     }
 
     private static Map<Material, Boolean> readCrops(FileConfiguration config) {
