@@ -307,7 +307,7 @@ public final class ReplenishPlusPlusCommand {
     }
 
     private static String yesNo(boolean value, String no) {
-        return value ? "<green>" + "Yes" : "<red>" + no;
+        return value ? "<green>Yes" : "<red>" + no;
     }
 
     private static int countEnabledSounds(ConfigCache cfg) {

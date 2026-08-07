@@ -183,8 +183,12 @@ public final class ReplantQueue {
             poolNext[head] = -1;
 
             if (processed >= maxPerTick) {
-                deferredTail = appendDeferred(deferredHead, deferredTail, head);
-                if (deferredHead == -1) deferredHead = head;
+                if (deferredHead == -1) {
+                    deferredHead = head;
+                } else {
+                    poolNext[deferredTail] = head;
+                }
+                deferredTail = head;
                 head = next;
                 continue;
             }
@@ -216,8 +220,12 @@ public final class ReplantQueue {
                 processed++;
             } else {
                 incrementRetry(head);
-                deferredTail = appendDeferred(deferredHead, deferredTail, head);
-                if (deferredHead == -1) deferredHead = head;
+                if (deferredHead == -1) {
+                    deferredHead = head;
+                } else {
+                    poolNext[deferredTail] = head;
+                }
+                deferredTail = head;
             }
             head = next;
         }
@@ -228,13 +236,6 @@ public final class ReplantQueue {
             wheelHeads[nextSlot]   = deferredHead;
         }
         cursor = nextSlot;
-    }
-
-    private int appendDeferred(int deferredHead, int deferredTail, int node) {
-        if (deferredHead != -1) {
-            poolNext[deferredTail] = node;
-        }
-        return node;
     }
 
     private boolean tryReplant(int index, Block block) {
@@ -421,12 +422,7 @@ public final class ReplantQueue {
     private void resetPool() {
         freeHead = -1;
         for (int i = poolBlocks.length - 1; i >= 0; i--) {
-            poolBlocks[i]    = null;
-            poolMaterials[i] = null;
-            poolMeta[i]      = 0;
-            poolPlayerIds[i] = null;
-            poolNext[i]      = freeHead;
-            freeHead         = i;
+            freeSlot(i);
         }
         pendingCount = 0;
     }
@@ -445,12 +441,7 @@ public final class ReplantQueue {
         poolPlayerIds = Arrays.copyOf(poolPlayerIds, newSize);
 
         for (int i = newSize - 1; i >= oldSize; i--) {
-            poolBlocks[i]    = null;
-            poolMaterials[i] = null;
-            poolMeta[i]      = 0;
-            poolPlayerIds[i] = null;
-            poolNext[i]      = freeHead;
-            freeHead         = i;
+            freeSlot(i);
         }
     }
 
@@ -463,12 +454,16 @@ public final class ReplantQueue {
     }
 
     private void release(int index) {
+        freeSlot(index);
+        pendingCount--;
+    }
+
+    private void freeSlot(int index) {
         poolBlocks[index]    = null;
         poolMaterials[index] = null;
         poolMeta[index]      = 0;
         poolPlayerIds[index] = null;
         poolNext[index]      = freeHead;
         freeHead             = index;
-        pendingCount--;
     }
 }
