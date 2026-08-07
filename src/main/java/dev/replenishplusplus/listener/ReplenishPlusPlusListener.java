@@ -2,6 +2,7 @@ package dev.replenishplusplus.listener;
 
 import dev.replenishplusplus.ReplenishPlusPlus;
 import dev.replenishplusplus.config.ConfigCache;
+import dev.replenishplusplus.config.MessageStyle;
 import dev.replenishplusplus.crop.AgeMetaRegistry;
 import dev.replenishplusplus.crop.CropAnchors;
 import dev.replenishplusplus.crop.CropInfo;
@@ -35,6 +36,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -137,10 +139,14 @@ public final class ReplenishPlusPlusListener implements Listener {
 
     private void handleBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        if (isInNonSurvivalMode(player) || player.isSneaking()) return;
+        if (isInNonSurvivalMode(player)) return;
 
         ConfigCache config = plugin.getConfigCache();
         if (!config.enabled()) return;
+
+        if (!plugin.getPlayerToggleManager().isEnabled(player)) return;
+
+        if (config.sneakToBypass() && player.isSneaking()) return;
 
         Block block = event.getBlock();
         CropType crop = CropType.fromMaterial(block.getType());
@@ -164,15 +170,21 @@ public final class ReplenishPlusPlusListener implements Listener {
         boolean wasMature = originalAge >= info.maximumAge();
         int replantedAge = wasMature ? 0 : originalAge;
 
+        boolean seedConsumed = false;
+        Collection<ItemStack> drops = wasMature
+                ? new ArrayList<>(block.getDrops(tool, player))
+                : Collections.emptyList();
+
         if (wasMature && config.requirePlayerSeed()) {
             if (!consumeSeed(player, config, crop)) return;
+            seedConsumed = true;
         }
 
-        event.setDropItems(false);
-        Collection<ItemStack> drops = wasMature ? block.getDrops(tool, player) : Collections.emptyList();
+        drops.removeIf(drop -> drop == null || drop.getAmount() <= 0);
 
+        event.setDropItems(false);
         distributeDrops(player, block, config, drops);
-        scheduleReplant(player, block, crop, config, replantedAge, blockData);
+        scheduleReplant(player, block, crop, config, replantedAge, blockData, seedConsumed);
     }
 
     private boolean isInNonSurvivalMode(Player player) {
@@ -194,7 +206,7 @@ public final class ReplenishPlusPlusListener implements Listener {
         String message = config.requiresToolMessage()
                 .replace("{crop}", TextUtil.prettyName(crop.material().name()))
                 .replace("{tool}", crop.requiredTool().displayName());
-        player.sendMessage(MINI_MESSAGE.deserialize(message));
+        notify(player, config, message);
         config.deniedToolSound().play(player);
     }
 
@@ -207,10 +219,20 @@ public final class ReplenishPlusPlusListener implements Listener {
             String message = config.needSeedMessage()
                     .replace("{count}", "1")
                     .replace("{seed}", TextUtil.prettyName(seed.name()));
-            player.sendMessage(MINI_MESSAGE.deserialize(message));
+            notify(player, config, message);
             config.deniedSeedSound().play(player);
         }
         return false;
+    }
+
+    private void notify(Player player, ConfigCache config, String message) {
+        MessageStyle style = config.messageStyle();
+        if (style == MessageStyle.NONE) return;
+        if (style == MessageStyle.ACTION_BAR) {
+            player.sendActionBar(MINI_MESSAGE.deserialize(message));
+        } else {
+            player.sendMessage(MINI_MESSAGE.deserialize(message));
+        }
     }
 
     private void distributeDrops(
@@ -223,7 +245,8 @@ public final class ReplenishPlusPlusListener implements Listener {
                     player, dropLocation, drops,
                     config.inventoryFullMessage(),
                     config.pickupSound(),
-                    config.inventoryFullSound());
+                    config.inventoryFullSound(),
+                    config.messageStyle());
             return;
         }
         World world = block.getWorld();
@@ -235,16 +258,17 @@ public final class ReplenishPlusPlusListener implements Listener {
 
     private void scheduleReplant(
             Player player, Block block, CropType crop, ConfigCache config,
-            int replantedAge, BlockData originalData) {
+            int replantedAge, BlockData originalData, boolean seedConsumed) {
 
         int delay = Math.max(1, config.replantDelayTicks());
+        UUID playerId = player.getUniqueId();
         if (crop.isCocoa()) {
             BlockFace facing = determineCocoaFacing(block, originalData, player);
             if (facing != null) {
-                plugin.enqueueReplant(block, Material.COCOA, delay, replantedAge, facing);
+                plugin.enqueueReplant(block, Material.COCOA, delay, replantedAge, facing, playerId, seedConsumed);
             }
         } else {
-            plugin.enqueueReplant(block, crop.material(), delay, replantedAge, null);
+            plugin.enqueueReplant(block, crop.material(), delay, replantedAge, null, playerId, seedConsumed);
         }
     }
 
