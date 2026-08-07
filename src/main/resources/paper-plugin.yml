@@ -8,32 +8,27 @@ website: "https://github.com/Mitra-88/ReplenishPlusPlus"
 folia-supported: true
 
 permissions:
-  replenishplusplus.*:
-    description: "Access to all ReplenishPlusPlus permissions."
-    default: op
-    children:
-      replenishplusplus.use: true
-      replenishplusplus.toggle: true
-      replenishplusplus.reload: true
-      replenishplusplus.status: true
-      replenishplusplus.version: true
-
   replenishplusplus.use:
-    description: "Allows using /replenishplusplus base command."
+    description: Allows the player to use the main /replenishplusplus command and view help.
     default: true
-
   replenishplusplus.toggle:
-    description: "Allows toggling ReplenishPlusPlus on/off globally."
+    description: Allows the player to toggle auto-replant for themselves personally.
+    default: true
+  replenishplusplus.toggle.global:
+    description: Allows an admin to toggle auto-replant globally for the whole server.
     default: op
-
-  replenishplusplus.reload:
-    description: "Allows reloading ReplenishPlusPlus configuration."
-    default: op
-
   replenishplusplus.status:
-    description: "Allows viewing current ReplenishPlusPlus status."
+    description: Allows the player to view the plugin status and active settings.
     default: true
-
+  replenishplusplus.reload:
+    description: Allows an admin to reload the config.yml.
+    default: op
   replenishplusplus.version:
-    description: "Allows viewing version information."
+    description: Allows the player to view the plugin version and update status.
     default: true
+  replenishplusplus.debug:
+    description: Allows an admin to view queue debug statistics.
+    default: op
+  replenishplusplus.update:
+    description: Allows an admin to receive in-game update notifications on join.
+    default: op
