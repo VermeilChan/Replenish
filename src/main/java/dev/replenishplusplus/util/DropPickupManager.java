@@ -1,5 +1,6 @@
 package dev.replenishplusplus.util;
 
+import dev.replenishplusplus.config.MessageStyle;
 import dev.replenishplusplus.config.SoundEffect;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Location;
@@ -22,7 +23,8 @@ public final class DropPickupManager {
             Collection<ItemStack> drops,
             String inventoryFullMessage,
             SoundEffect pickupSound,
-            SoundEffect inventoryFullSound) {
+            SoundEffect inventoryFullSound,
+            MessageStyle messageStyle) {
 
         if (player == null || !player.isOnline() || dropLocation == null || drops == null || drops.isEmpty()) {
             return;
@@ -60,11 +62,20 @@ public final class DropPickupManager {
         }
 
         if (anyDropped) {
-            player.sendMessage(MINI_MESSAGE.deserialize(inventoryFullMessage));
+            sendMessage(player, inventoryFullMessage, messageStyle);
             if (inventoryFullSound != null) inventoryFullSound.play(player);
         }
         if (anyAdded && pickupSound != null) {
             pickupSound.play(player);
+        }
+    }
+
+    private static void sendMessage(Player player, String message, MessageStyle style) {
+        if (style == MessageStyle.NONE) return;
+        if (style == MessageStyle.ACTION_BAR) {
+            player.sendActionBar(MINI_MESSAGE.deserialize(message));
+        } else {
+            player.sendMessage(MINI_MESSAGE.deserialize(message));
         }
     }
 
