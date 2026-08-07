@@ -26,7 +26,7 @@ public final class UpdateChecker {
             .connectTimeout(Duration.ofSeconds(4))
             .build();
 
-    private static final String PREFIX = "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>";
+    private static final String PREFIX = "<dark_gray>[<yellow>ReplenishPlusPlus<dark_gray>] <dark_gray>» <gray>";
     private static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " + "(KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36";
 
@@ -116,7 +116,7 @@ public final class UpdateChecker {
     }
 
     private void console(String message) {
-        plugin.getServer().getGlobalRegionScheduler().execute(plugin, () ->
+        plugin.getServer().getAsyncScheduler().runNow(plugin, _ ->
                 Bukkit.getConsoleSender().sendMessage(MINI_MESSAGE.deserialize(message))
         );
     }
