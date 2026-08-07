@@ -1,6 +1,6 @@
 # Replenish++ 🌾
 
-Auto-replant plugin for Paper/Purpur. You break a crop, it goes back in the ground. That's basically it. Stole the idea from Hypixel's Replenish because I got tired of replanting by hand.
+Auto-replant plugin for Paper/Purpur/Folia. You break a crop, it goes back in the ground. That's basically it. Stole the idea from Hypixel's Replenish because I got tired of replanting by hand.
 
 ![Preview](assets/output.webp)
 
@@ -26,9 +26,9 @@ Auto-replant plugin for Paper/Purpur. You break a crop, it goes back in the grou
 ## What happens by default (no config changes)
 
 **Mature crop:**
-- Replants at age 0
-- Takes 1 seed from your inventory/off-hand (if `requirePlayerSeed` is on)
-- Drops go to you directly (if `directPickup` is on)
+- Replants as a newly planted crop (age 0 / just planted)
+- Takes 1 seed from your inventory/off-hand (if `requirePlayerSeed: true`)
+- Drops go to you directly (if `directPickup: true`)
 
 **Immature crop:**
 - Replants at the same age it was. No seed needed.
@@ -37,20 +37,24 @@ Auto-replant plugin for Paper/Purpur. You break a crop, it goes back in the grou
 
 ## Commands & permissions
 
-| Command                      | What it does     |
-|------------------------------|------------------|
-| `/replenishplusplus status`  | Current settings |
-| `/replenishplusplus version` | Plugin version   |
-| `/replenishplusplus toggle`  | On/off switch    |
-| `/replenishplusplus reload`  | Reload config    |
+| Command                          | What it does                                 |
+|----------------------------------|----------------------------------------------|
+| `/replenishplusplus status`      | Current settings                             |
+| `/replenishplusplus version`     | Plugin version & update status               |
+| `/replenishplusplus toggle`      | On/off switch for yourself                   |
+| `/replenishplusplus reload`      | Reload config.yml                            |
+| `/replenishplusplus debug queue` | View queue debug stats & performance metrics |
 
 Permissions:
 
 - `replenishplusplus.status` - everyone
 - `replenishplusplus.version` - everyone
 - `replenishplusplus.use` - op
-- `replenishplusplus.toggle` - op
+- `replenishplusplus.toggle` - everyone
+- `replenishplusplus.toggle.global` - op
 - `replenishplusplus.reload` - op
+- `replenishplusplus.debug` - op
+- `replenishplusplus.update` - op
 - `replenishplusplus.*` - op
 
 ## Config
@@ -61,8 +65,10 @@ The stuff you'll probably touch:
 enabled: true
 requirePlayerSeed: true
 directPickup: true
+sneakToBypass: true
 replantDelayTicks: 1
 maxReplantsPerTick: 1024
+maxReplantsQueued: 4096
 checkUpdates: true
 ```
 
@@ -70,55 +76,70 @@ checkUpdates: true
 <summary>Full default config.yml</summary>
 
 ```yaml
-# ============================================
-#             REPLENISH++ CONFIG
-# ============================================
+# ==============================================================================
+# ReplenishPlusPlus Configuration
+# ==============================================================================
 
-# --------------------------
-# GENERAL SETTINGS
-# --------------------------
+# Global master switch. If false, no crops will auto-replant anywhere.
+# (Players can still toggle their own personal auto-replant with /rpp toggle)
+enabled: true
 
-enabled: true                  # false = no replanting
-requirePlayerSeed: true        # eat 1 seed on mature harvest
-directPickup: true             # drops go to you, not the ground
-replantDelayTicks: 1           # 1 tick = 50ms
+# If true, players must have the correct seed in their inventory to replant.
+# If false, crops will replant themselves magically without consuming seeds.
+requirePlayerSeed: true
 
-maxReplantsPerTick: 1024      # maximum crops replanted per tick (20 ticks/second)
-                              # raise this on beefier servers if replants lag behind
-                              # lower it on weaker servers to reduce load
+# If true, harvested crop drops go directly into the player's inventory.
+# If false, drops fall on the ground like vanilla Minecraft.
+directPickup: true
 
-maxReplantsQueued: 4096       # Maximum number of replants that can be queued at once.
-                              # If this limit is exceeded (e.g. mass crop trampling), new replants are dropped
-                              # to prevent unbounded memory growth. Must be at least 256.
+# If true, sneaking while breaking a crop will bypass auto-replant entirely.
+# The crop will break normally and drop on the ground.
+sneakToBypass: true
 
-checkUpdates: true             # check GitHub for new releases on server startup
+# How player-facing notifications (inventory full, need seed, wrong tool) are displayed.
+# CHAT       = Sends a normal chat message.
+# ACTION_BAR = Sends a less spammy message above the hotbar.
+# NONE       = Silences all player-facing text notifications (sounds still play).
+messageStyle: CHAT
 
-# --------------------------
-# CROP TOGGLES
-# --------------------------
+# The delay (in server ticks) before a broken crop is replanted. 20 ticks = 1 second.
+replantDelayTicks: 1
 
+# Maximum number of crops that can be replanted in a single server tick.
+# Prevents lag if a massive farm is harvested all at once. (Minimum 256)
+maxReplantsPerTick: 1024
+
+# Maximum number of pending replants that can be held in the queue at once.
+# If the queue is full, replants will be dropped to prevent server lag. (Minimum 256)
+maxReplantsQueued: 4096
+
+# Should the plugin check for updates on startup and notify admins?
+checkUpdates: true
+
+# ------------------------------------------------------------------------------
+# Crop Settings
+# ------------------------------------------------------------------------------
 crops:
-  wheat: true
-  carrots: true
-  potatoes: true
+  wheat:       true
+  carrots:     true
+  potatoes:    true
   nether_wart: true
-  cocoa: true
-  beetroots: true
+  cocoa:       true
+  beetroots:   true
 
-# --------------------------
-# CHAT MESSAGES
-# --------------------------
-# Placeholders: {crop}, {tool}, {seed}, {count}
+# ------------------------------------------------------------------------------
+# Messages
+# ------------------------------------------------------------------------------
 # Docs: https://docs.advntr.dev/minimessage/format.html
 
 messages:
-  inventory-full: "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>Your inventory was full, so some items dropped on the ground instead."
-  requires-tool: "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>You need a <yellow>{tool} <gray>to harvest <yellow>{crop}<gray>."
-  need-seed: "<dark_gray>[<yellow>Replenish<dark_gray>] <dark_gray>» <gray>You need <yellow>{count}x {seed} <gray>in your inventory to replant this."
+  inventory-full: "<dark_gray>[<yellow>ReplenishPlusPlus<dark_gray>] <dark_gray>» <gray>Your inventory was full, so some items dropped on the ground instead."
+  requires-tool:  "<dark_gray>[<yellow>ReplenishPlusPlus<dark_gray>] <dark_gray>» <gray>You need a <yellow>{tool} <gray>to harvest <yellow>{crop}<gray>."
+  need-seed:      "<dark_gray>[<yellow>ReplenishPlusPlus<dark_gray>] <dark_gray>» <gray>You need <yellow>{count}x {seed} <gray>in your inventory to replant this."
 
-# --------------------------
-# SOUND EFFECTS
-# --------------------------
+# ------------------------------------------------------------------------------
+# Sounds
+# ------------------------------------------------------------------------------
 # Docs: https://jd.papermc.io/paper/org/bukkit/Sound.html
 #         Invalid names log a warning and fall back to the default.
 # volume: 0.0 (silent) to 1.0 (loudest)
@@ -127,33 +148,41 @@ messages:
 # To disable a sound entirely, set enabled: false.
 
 sounds:
-  # Played when harvested crops go into your inventory
+  # Played when crop drops are successfully added to the player's inventory.
   pickup:
     enabled: true
     sound: ENTITY_ITEM_PICKUP
     volume: 1.0
     pitch: 1.0
 
-  # Played when your inventory is full and items drop on the ground
+  # Played when the player's inventory is full and items drop on the ground.
   inventory-full:
     enabled: true
     sound: BLOCK_NOTE_BLOCK_BASS
     volume: 1.0
     pitch: 0.5
 
-  # Played when you try to harvest without the required tool
+  # Played when a player tries to harvest a crop with the wrong tool.
   denied-tool:
     enabled: true
     sound: ENTITY_VILLAGER_NO
     volume: 1.0
     pitch: 0.5
 
-  # Played when you try to harvest but lack a seed to replant
+  # Played when a player tries to harvest a crop but lacks the required seed.
   denied-seed:
     enabled: true
     sound: ENTITY_VILLAGER_NO
     volume: 1.0
     pitch: 0.5
+
+  # Played when a replant FAILS (e.g., chunk unloaded, block occupied, farmland trampled).
+  # Alerts the player that their seed was refunded/dropped instead of planted.
+  replant-failed:
+    enabled: true
+    sound: ENTITY_ITEM_BREAK
+    volume: 0.5
+    pitch: 1.0
 ```
 
 </details>
