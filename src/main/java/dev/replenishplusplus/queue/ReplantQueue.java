@@ -1,9 +1,11 @@
 package dev.replenishplusplus.queue;
 
+import dev.replenishplusplus.ReplenishPlusPlus;
 import dev.replenishplusplus.crop.AgeMetaRegistry;
 import dev.replenishplusplus.crop.CocoaCropInfo;
 import dev.replenishplusplus.crop.CropAnchors;
 import dev.replenishplusplus.crop.CropInfo;
+import dev.replenishplusplus.crop.CropType;
 import dev.replenishplusplus.crop.SimpleCropInfo;
 import dev.replenishplusplus.util.LocationUtil;
 import dev.replenishplusplus.util.WarningThrottle;
@@ -13,9 +15,11 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.logging.Level;
 
 public final class ReplantQueue {
@@ -31,8 +35,10 @@ public final class ReplantQueue {
     private static final int FACE_MASK     = 0x3;
     private static final int RETRY_SHIFT   = 10;
     private static final int RETRY_MASK    = 0xFF;
+    private static final int SEED_FLAG_SHIFT = 18;
+    private static final int SEED_FLAG_MASK  = 0x1;
 
-    private final Plugin plugin;
+    private final ReplenishPlusPlus plugin;
     private final AgeMetaRegistry ageMetaRegistry;
     private final int maxPerTick;
     private final int maxPoolSize;
@@ -43,6 +49,7 @@ public final class ReplantQueue {
     private Material[] poolMaterials;
     private int[]      poolMeta;
     private int[]      poolNext;
+    private UUID[]     poolPlayerIds;
 
     private int freeHead = -1;
     private int cursor   = 0;
@@ -50,7 +57,7 @@ public final class ReplantQueue {
     private ScheduledTask scheduledTask;
     private volatile boolean started = false;
 
-    public ReplantQueue(Plugin plugin, int maxPerTick, int maxPoolSize, AgeMetaRegistry ageMetaRegistry) {
+    public ReplantQueue(ReplenishPlusPlus plugin, int maxPerTick, int maxPoolSize, AgeMetaRegistry ageMetaRegistry) {
         this.plugin          = plugin;
         this.ageMetaRegistry = ageMetaRegistry;
         this.maxPerTick      = Math.max(256, maxPerTick);
@@ -78,13 +85,51 @@ public final class ReplantQueue {
         pendingCount = 0;
     }
 
+    public synchronized int flush() {
+        if (scheduledTask != null) {
+            scheduledTask.cancel();
+            scheduledTask = null;
+        }
+        started = false;
+
+        int flushed = 0;
+        for (int slot = 0; slot < WHEEL_SIZE; slot++) {
+            int head = wheelHeads[slot];
+            if (head == -1) continue;
+            wheelHeads[slot] = -1;
+
+            while (head != -1) {
+                int next = poolNext[head];
+                poolNext[head] = -1;
+
+                Block block = poolBlocks[head];
+                if (block != null) {
+                    try {
+                        tryReplant(head, block);
+                        flushed++;
+                    } catch (Exception e) {
+                        WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.REPLANT_FAILED,
+                                "Flush error at " + LocationUtil.describe(block) + ": " + e.getMessage());
+                    }
+                }
+                release(head);
+                head = next;
+            }
+        }
+        return flushed;
+    }
+
+    public synchronized QueueStats getStats() {
+        return new QueueStats(pendingCount, maxPoolSize, poolBlocks.length);
+    }
+
     public synchronized int pendingCount() {
         return pendingCount;
     }
 
     public synchronized void enqueue(
             Block block, Material material, int delayTicks,
-            int targetAge, BlockFace cocoaFacing) {
+            int targetAge, BlockFace cocoaFacing, UUID playerId, boolean seedConsumed) {
 
         try {
             if (pendingCount >= maxPoolSize) {
@@ -99,7 +144,8 @@ public final class ReplantQueue {
 
             poolBlocks[index]    = block;
             poolMaterials[index] = material;
-            poolMeta[index]      = packMeta(targetAge, cocoaFacing);
+            poolMeta[index]      = packMeta(targetAge, cocoaFacing, seedConsumed);
+            poolPlayerIds[index] = playerId;
             poolNext[index]      = wheelHeads[slot];
             wheelHeads[slot]     = index;
             pendingCount++;
@@ -156,6 +202,7 @@ public final class ReplantQueue {
             } else if (retryCount(head) >= MAX_UNLOAD_RETRIES) {
                 WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.ABANDONED_REPLANT,
                         "Abandoning replant at " + LocationUtil.describe(block) + " - chunk remained unloaded.");
+                handleFailureForUnloadedChunk(poolMaterials[head], poolPlayerIds[head], seedWasConsumed(head));
                 release(head);
                 processed++;
             } else {
@@ -197,18 +244,25 @@ public final class ReplantQueue {
         int metadata = poolMeta[index];
         int targetAge = metadata & AGE_MASK;
         int faceOrdinal = (metadata >>> FACE_SHIFT) & FACE_MASK;
+        UUID playerId = poolPlayerIds[index];
+        boolean seedConsumed = seedWasConsumed(index);
         Location loc = block.getLocation();
 
         Runnable action = () -> {
             try {
+                boolean success;
                 switch (info) {
-                    case CocoaCropInfo cocoa -> replantCocoa(block, cocoa, targetAge, faceOrdinal);
-                    case SimpleCropInfo simple -> replantNormal(block, simple, targetAge);
-                    default -> {}
+                    case CocoaCropInfo cocoa -> success = replantCocoa(block, cocoa, targetAge, faceOrdinal);
+                    case SimpleCropInfo simple -> success = replantNormal(block, simple, targetAge);
+                    default -> success = true;
+                }
+                if (!success) {
+                    handleReplantFailure(block, material, playerId, seedConsumed);
                 }
             } catch (Exception e) {
                 WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.REPLANT_FAILED,
                         "Failed to replant crop at " + LocationUtil.describe(block) + ": " + e.getMessage());
+                handleReplantFailure(block, material, playerId, seedConsumed);
             }
         };
 
@@ -220,24 +274,69 @@ public final class ReplantQueue {
         return true;
     }
 
-    private void replantNormal(Block block, SimpleCropInfo info, int targetAge) {
-        if (!block.getType().isAir()) return;
+    private boolean replantNormal(Block block, SimpleCropInfo info, int targetAge) {
+        if (!block.getType().isAir()) {
+            return false;
+        }
 
         Material below = block.getRelative(BlockFace.DOWN).getType();
-        if (info.requiresFarmland() && below != Material.FARMLAND)   return;
-        if (info.requiresSoulSand() && below != Material.SOUL_SAND) return;
+        if (info.requiresFarmland() && below != Material.FARMLAND) {
+            return false;
+        }
+        if (info.requiresSoulSand() && below != Material.SOUL_SAND) {
+            return false;
+        }
 
         block.setBlockData(info.stateFor(targetAge), false);
+        return true;
     }
 
-    private void replantCocoa(Block block, CocoaCropInfo info, int targetAge, int faceOrdinal) {
-        if (!block.getType().isAir()) return;
+    private boolean replantCocoa(Block block, CocoaCropInfo info, int targetAge, int faceOrdinal) {
+        if (!block.getType().isAir()) {
+            return false;
+        }
 
         BlockFace face  = AgeMetaRegistry.COCOA_FACES.get(faceOrdinal);
         Block attached = block.getRelative(face);
-        if (!CropAnchors.JUNGLE_LOGS.contains(attached.getType())) return;
+        if (!CropAnchors.JUNGLE_LOGS.contains(attached.getType())) {
+            return false;
+        }
 
         block.setBlockData(info.stateFor(targetAge, faceOrdinal), false);
+        return true;
+    }
+
+    private void handleReplantFailure(Block block, Material cropMaterial, UUID playerId, boolean seedConsumed) {
+        if (seedConsumed) {
+            CropType crop = CropType.fromMaterial(cropMaterial);
+            if (crop != null) {
+                block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(crop.seed()));
+            }
+        }
+
+        if (playerId != null) {
+            Player player = plugin.getServer().getPlayer(playerId);
+            if (player != null && player.isOnline()) {
+                plugin.getConfigCache().replantFailedSound().play(player);
+            }
+        }
+    }
+
+    private void handleFailureForUnloadedChunk(Material cropMaterial, UUID playerId, boolean seedConsumed) {
+        if (playerId == null) return;
+        Player player = plugin.getServer().getPlayer(playerId);
+        if (player == null || !player.isOnline()) return;
+
+        plugin.getConfigCache().replantFailedSound().play(player);
+
+        if (seedConsumed) {
+            CropType crop = CropType.fromMaterial(cropMaterial);
+            if (crop != null) {
+                Location playerLoc = player.getLocation();
+                plugin.getServer().getRegionScheduler().execute(plugin, playerLoc, () ->
+                        player.getWorld().dropItemNaturally(playerLoc, new ItemStack(crop.seed())));
+            }
+        }
     }
 
     private static boolean isChunkLoaded(Block block) {
@@ -259,10 +358,15 @@ public final class ReplantQueue {
         return delay;
     }
 
-    private static int packMeta(int targetAge, BlockFace face) {
+    private static int packMeta(int targetAge, BlockFace face, boolean seedConsumed) {
         int safeAge = Math.max(0, targetAge) & AGE_MASK;
         int faceOrdinal = faceToOrdinal(face) & FACE_MASK;
-        return safeAge | (faceOrdinal << FACE_SHIFT);
+        int seedFlag = seedConsumed ? 1 : 0;
+        return safeAge | (faceOrdinal << FACE_SHIFT) | (seedFlag << SEED_FLAG_SHIFT);
+    }
+
+    private boolean seedWasConsumed(int index) {
+        return ((poolMeta[index] >>> SEED_FLAG_SHIFT) & SEED_FLAG_MASK) == 1;
     }
 
     private int retryCount(int index) {
@@ -288,6 +392,7 @@ public final class ReplantQueue {
         poolMaterials = new Material[size];
         poolMeta      = new int[size];
         poolNext      = new int[size];
+        poolPlayerIds = new UUID[size];
         for (int i = size - 1; i >= 0; i--) {
             poolNext[i] = freeHead;
             freeHead    = i;
@@ -300,6 +405,7 @@ public final class ReplantQueue {
             poolBlocks[i]    = null;
             poolMaterials[i] = null;
             poolMeta[i]      = 0;
+            poolPlayerIds[i] = null;
             poolNext[i]      = freeHead;
             freeHead         = i;
         }
@@ -317,11 +423,13 @@ public final class ReplantQueue {
         poolMaterials = Arrays.copyOf(poolMaterials, newSize);
         poolMeta      = Arrays.copyOf(poolMeta,      newSize);
         poolNext      = Arrays.copyOf(poolNext,      newSize);
+        poolPlayerIds = Arrays.copyOf(poolPlayerIds, newSize);
 
         for (int i = newSize - 1; i >= oldSize; i--) {
             poolBlocks[i]    = null;
             poolMaterials[i] = null;
             poolMeta[i]      = 0;
+            poolPlayerIds[i] = null;
             poolNext[i]      = freeHead;
             freeHead         = i;
         }
@@ -339,6 +447,7 @@ public final class ReplantQueue {
         poolBlocks[index]    = null;
         poolMaterials[index] = null;
         poolMeta[index]      = 0;
+        poolPlayerIds[index] = null;
         poolNext[index]      = freeHead;
         freeHead             = index;
         pendingCount--;
