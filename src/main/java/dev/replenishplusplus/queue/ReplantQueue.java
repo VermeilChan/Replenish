@@ -135,6 +135,11 @@ public final class ReplantQueue {
             Block block, Material material, int delayTicks,
             int targetAge, BlockFace cocoaFacing, UUID playerId, boolean seedConsumed) {
 
+        if (!started) {
+            handleFailureForUnloadedChunk(material, playerId, seedConsumed);
+            return;
+        }
+
         try {
             if (pendingCount >= maxPoolSize) {
                 WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.QUEUE_BACKPRESSURE,
@@ -314,7 +319,16 @@ public final class ReplantQueue {
         if (seedConsumed) {
             CropType crop = CropType.fromMaterial(cropMaterial);
             if (crop != null) {
-                block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(crop.seed()));
+                ItemStack seedStack = new ItemStack(crop.seed());
+                World world = block.getLocation().getWorld();
+                if (world != null) {
+                    world.dropItemNaturally(block.getLocation(), seedStack);
+                } else if (playerId != null) {
+                    Player player = plugin.getServer().getPlayer(playerId);
+                    if (player != null && player.isOnline()) {
+                        player.getWorld().dropItemNaturally(player.getLocation(), seedStack);
+                    }
+                }
             }
         }
 

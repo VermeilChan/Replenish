@@ -16,7 +16,7 @@ public final class SoundResolver {
 
     private static final Map<String, Sound> EXACT = new HashMap<>();
     private static final Map<String, Sound> ALIAS = new HashMap<>();
-    private static boolean loaded = false;
+    private static volatile boolean loaded = false;
 
     private SoundResolver() {}
 
