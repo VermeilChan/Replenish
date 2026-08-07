@@ -16,6 +16,7 @@ public final class PlayerToggleManager {
     private final File file;
     private FileConfiguration config;
     private final ConcurrentHashMap<UUID, Boolean> toggles = new ConcurrentHashMap<>();
+    private final Object configLock = new Object();
 
     public PlayerToggleManager(ReplenishPlusPlus plugin) {
         this.plugin = plugin;
@@ -58,11 +59,13 @@ public final class PlayerToggleManager {
 
     private void saveAsync(UUID uuid, boolean enabled) {
         plugin.getServer().getAsyncScheduler().runNow(plugin, _ -> {
-            config.set(uuid.toString(), enabled);
-            try {
-                config.save(file);
-            } catch (IOException e) {
-                plugin.getLogger().warning("Could not save players.yml: " + e.getMessage());
+            synchronized (configLock) {
+                config.set(uuid.toString(), enabled);
+                try {
+                    config.save(file);
+                } catch (IOException e) {
+                    plugin.getLogger().warning("Could not save players.yml: " + e.getMessage());
+                }
             }
         });
     }

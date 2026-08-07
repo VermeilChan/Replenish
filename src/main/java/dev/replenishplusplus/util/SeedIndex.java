@@ -111,7 +111,7 @@ public final class SeedIndex {
 
     private static int findNextSlot(PlayerInventory inventory, Material material) {
         ItemStack offhand = inventory.getItem(EquipmentSlot.OFF_HAND);
-        if (offhand.getType() == material && offhand.getAmount() > 0) {
+        if (isUsable(offhand) && offhand.getType() == material) {
             return SLOT_OFFHAND;
         }
 
