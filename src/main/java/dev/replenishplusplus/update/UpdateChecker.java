@@ -116,6 +116,7 @@ public final class UpdateChecker {
     }
 
     private void console(String message) {
+        if (!plugin.isEnabled()) return;
         plugin.getServer().getAsyncScheduler().runNow(plugin, _ ->
                 Bukkit.getConsoleSender().sendMessage(MINI_MESSAGE.deserialize(message))
         );

@@ -124,7 +124,8 @@ public final class ReplenishPlusPlusCommand {
     private void handleGlobalToggle(CommandSender sender) {
         boolean nowEnabled = !plugin.isEnabledGlobally();
         plugin.setGloballyEnabled(nowEnabled);
-        plugin.getServer().getAsyncScheduler().runNow(plugin, _ -> {
+
+        plugin.getServer().getGlobalRegionScheduler().execute(plugin, () -> {
             plugin.getConfig().set("enabled", nowEnabled);
             plugin.saveConfig();
         });
@@ -139,28 +140,26 @@ public final class ReplenishPlusPlusCommand {
     private void handleReload(CommandSender sender) {
         send(sender, "<gray>Reloading configuration...");
 
-        plugin.getServer().getAsyncScheduler().runNow(plugin, _ -> {
+        plugin.getServer().getGlobalRegionScheduler().execute(plugin, () -> {
             plugin.reloadLocalConfig();
             ConfigCache cfg = plugin.getConfigCache();
 
-            plugin.getServer().getGlobalRegionScheduler().execute(plugin, () -> {
-                send(sender, "");
-                send(sender, "<dark_gray>      [ <yellow><bold>Config Reloaded <dark_gray>]       <reset>");
-                send(sender, "");
-                send(sender, "  " + Messages.DOT + "<gray>Replanting: " + onOff(cfg.enabled()));
-                send(sender, "  " + Messages.DOT + "<gray>Replant delay: <white>" + cfg.replantDelayTicks() + " tick(s)");
-                send(sender, "  " + Messages.DOT + "<gray>Replants per tick: <white>" + cfg.maxReplantsPerTick());
-                send(sender, "  " + Messages.DOT + "<gray>Queue capacity: <white>" + cfg.maxReplantsQueued());
-                send(sender, "  " + Messages.DOT + "<gray>Give drops directly to player: " + yesNo(cfg.directPickup(), "No, drop on ground"));
-                send(sender, "  " + Messages.DOT + "<gray>Require a seed to replant: " + yesNo(cfg.requirePlayerSeed(), "No"));
-                send(sender, "  " + Messages.DOT + "<gray>Sneak to bypass: " + yesNo(cfg.sneakToBypass(), "No"));
-                send(sender, "  " + Messages.DOT + "<gray>Message style: <white>" + cfg.messageStyle());
-                send(sender, "  " + Messages.DOT + "<gray>Sounds: <white>" + countEnabledSounds(cfg) + "/5 <gray>enabled");
-                send(sender, "");
-                send(sender, "<gray>Your config.yml changes are now live.");
-                send(sender, "");
-                send(sender, Messages.LINE);
-            });
+            send(sender, "");
+            send(sender, "<dark_gray>      [ <yellow><bold>Config Reloaded <dark_gray>]       <reset>");
+            send(sender, "");
+            send(sender, "  " + Messages.DOT + "<gray>Replanting: " + onOff(cfg.enabled()));
+            send(sender, "  " + Messages.DOT + "<gray>Replant delay: <white>" + cfg.replantDelayTicks() + " tick(s)");
+            send(sender, "  " + Messages.DOT + "<gray>Replants per tick: <white>" + cfg.maxReplantsPerTick());
+            send(sender, "  " + Messages.DOT + "<gray>Queue capacity: <white>" + cfg.maxReplantsQueued());
+            send(sender, "  " + Messages.DOT + "<gray>Give drops directly to player: " + yesNo(cfg.directPickup(), "No, drop on ground"));
+            send(sender, "  " + Messages.DOT + "<gray>Require a seed to replant: " + yesNo(cfg.requirePlayerSeed(), "No"));
+            send(sender, "  " + Messages.DOT + "<gray>Sneak to bypass: " + yesNo(cfg.sneakToBypass(), "No"));
+            send(sender, "  " + Messages.DOT + "<gray>Message style: <white>" + cfg.messageStyle());
+            send(sender, "  " + Messages.DOT + "<gray>Sounds: <white>" + countEnabledSounds(cfg) + "/5 <gray>enabled");
+            send(sender, "");
+            send(sender, "<gray>Your config.yml changes are now live.");
+            send(sender, "");
+            send(sender, Messages.LINE);
         });
     }
 

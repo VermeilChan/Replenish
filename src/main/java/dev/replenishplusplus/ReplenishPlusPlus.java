@@ -73,7 +73,10 @@ public final class ReplenishPlusPlus extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (replantQueue != null) replantQueue.stop();
+        if (replantQueue != null) {
+            replantQueue.flush();
+            replantQueue.stop();
+        }
     }
 
     public void reloadLocalConfig() {
@@ -110,16 +113,19 @@ public final class ReplenishPlusPlus extends JavaPlugin {
     }
 
     private void restartQueue(int maxPerTick, int maxQueued) {
-        if (replantQueue != null) {
-            int pending = replantQueue.pendingCount();
+        ReplantQueue oldQueue = replantQueue;
+        ReplantQueue newQueue = new ReplantQueue(this, maxPerTick, maxQueued, ageMetaRegistry);
+        newQueue.start();
+        replantQueue = newQueue;
+
+        if (oldQueue != null) {
+            int pending = oldQueue.pendingCount();
             if (pending > 0) {
-                int flushed = replantQueue.flush();
+                int flushed = oldQueue.flush();
                 sendConsole("<yellow>Flushed " + flushed + "/" + pending + " pending replants before queue restart.");
             }
-            replantQueue.stop();
+            oldQueue.stop();
         }
-        replantQueue = new ReplantQueue(this, maxPerTick, maxQueued, ageMetaRegistry);
-        replantQueue.start();
     }
 
     public UpdateChecker getUpdateChecker() { return updateChecker; }
