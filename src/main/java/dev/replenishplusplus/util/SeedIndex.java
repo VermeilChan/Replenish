@@ -6,7 +6,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,7 +33,7 @@ public final class SeedIndex {
 
         PlayerInventory inventory = player.getInventory();
         Map<Material, Integer> cache = cacheByPlayer.computeIfAbsent(
-                player.getUniqueId(), _ -> new HashMap<>());
+                player.getUniqueId(), _ -> new ConcurrentHashMap<>());
 
         synchronized (cache) {
             Integer slot = cache.get(seedMaterial);
@@ -90,16 +89,18 @@ public final class SeedIndex {
     }
 
     private static Map<Material, Integer> buildIndex(PlayerInventory inventory) {
-        Map<Material, Integer> index = new HashMap<>();
+        Map<Material, Integer> index = new ConcurrentHashMap<>();
+
+        ItemStack offhand = inventory.getItem(EquipmentSlot.OFF_HAND);
+        if (isUsable(offhand)) {
+            index.putIfAbsent(offhand.getType(), SLOT_OFFHAND);
+        }
+
         for (int i = 0; i < STORAGE_SIZE; i++) {
             ItemStack stack = inventory.getItem(i);
             if (isUsable(stack)) {
                 index.putIfAbsent(stack.getType(), i);
             }
-        }
-        ItemStack offhand = inventory.getItem(EquipmentSlot.OFF_HAND);
-        if (isUsable(offhand)) {
-            index.putIfAbsent(offhand.getType(), SLOT_OFFHAND);
         }
         return index;
     }
@@ -109,15 +110,16 @@ public final class SeedIndex {
     }
 
     private static int findNextSlot(PlayerInventory inventory, Material material) {
+        ItemStack offhand = inventory.getItem(EquipmentSlot.OFF_HAND);
+        if (offhand.getType() == material && offhand.getAmount() > 0) {
+            return SLOT_OFFHAND;
+        }
+
         for (int i = 0; i < STORAGE_SIZE; i++) {
             ItemStack stack = inventory.getItem(i);
             if (stack != null && stack.getType() == material && stack.getAmount() > 0) {
                 return i;
             }
-        }
-        ItemStack offhand = inventory.getItem(EquipmentSlot.OFF_HAND);
-        if (offhand.getType() == material && offhand.getAmount() > 0) {
-            return SLOT_OFFHAND;
         }
         return SLOT_NONE;
     }
