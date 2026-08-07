@@ -3,11 +3,14 @@ package dev.replenishplusplus;
 import dev.replenishplusplus.command.ReplenishPlusPlusCommand;
 import dev.replenishplusplus.config.ConfigCache;
 import dev.replenishplusplus.config.Messages;
+import dev.replenishplusplus.config.PlayerToggleManager;
 import dev.replenishplusplus.crop.AgeMetaRegistry;
 import dev.replenishplusplus.crop.CropType;
 import dev.replenishplusplus.listener.ReplenishPlusPlusListener;
+import dev.replenishplusplus.queue.QueueStats;
 import dev.replenishplusplus.queue.ReplantQueue;
 import dev.replenishplusplus.update.UpdateChecker;
+import dev.replenishplusplus.update.UpdateNotificationListener;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -18,6 +21,7 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 
@@ -37,12 +41,14 @@ public final class ReplenishPlusPlus extends JavaPlugin {
     private AgeMetaRegistry ageMetaRegistry;
     private volatile ReplantQueue replantQueue;
     private UpdateChecker updateChecker;
+    private PlayerToggleManager playerToggleManager;
     private ConsoleCommandSender console;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         ageMetaRegistry = new AgeMetaRegistry(this);
+        playerToggleManager = new PlayerToggleManager(this);
         console = Bukkit.getConsoleSender();
         reloadLocalConfig();
 
@@ -60,6 +66,7 @@ public final class ReplenishPlusPlus extends JavaPlugin {
         updateChecker.check();
 
         getServer().getPluginManager().registerEvents(new ReplenishPlusPlusListener(this, ageMetaRegistry), this);
+        getServer().getPluginManager().registerEvents(new UpdateNotificationListener(this), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> new ReplenishPlusPlusCommand(this).register(event.registrar()));
     }
@@ -79,9 +86,23 @@ public final class ReplenishPlusPlus extends JavaPlugin {
 
         FileConfiguration config = getConfig();
 
-        int delayTicks = Math.max(1, config.getInt("replantDelayTicks", DEFAULT_REPLANT_DELAY_TICKS));
-        int maxPerTick = Math.max(MIN_REPLANTS_PER_TICK, config.getInt("maxReplantsPerTick", DEFAULT_MAX_REPLANTS));
-        int maxQueued  = Math.max(MIN_QUEUED, config.getInt("maxReplantsQueued", DEFAULT_MAX_QUEUED));
+        int rawDelay   = config.getInt("replantDelayTicks", DEFAULT_REPLANT_DELAY_TICKS);
+        int rawPerTick = config.getInt("maxReplantsPerTick", DEFAULT_MAX_REPLANTS);
+        int rawQueued  = config.getInt("maxReplantsQueued", DEFAULT_MAX_QUEUED);
+
+        if (rawDelay < 1) {
+            getLogger().warning("[Replenish] replantDelayTicks was " + rawDelay + ", clamped to 1");
+        }
+        if (rawPerTick < MIN_REPLANTS_PER_TICK) {
+            getLogger().warning("[Replenish] maxReplantsPerTick was " + rawPerTick + ", raised to minimum " + MIN_REPLANTS_PER_TICK);
+        }
+        if (rawQueued < MIN_QUEUED) {
+            getLogger().warning("[Replenish] maxReplantsQueued was " + rawQueued + ", raised to minimum " + MIN_QUEUED);
+        }
+
+        int delayTicks = Math.max(1, rawDelay);
+        int maxPerTick = Math.max(MIN_REPLANTS_PER_TICK, rawPerTick);
+        int maxQueued  = Math.max(MIN_QUEUED, rawQueued);
 
         configCacheRef.set(ConfigCache.from(config, delayTicks, maxPerTick, maxQueued));
 
@@ -92,19 +113,19 @@ public final class ReplenishPlusPlus extends JavaPlugin {
         if (replantQueue != null) {
             int pending = replantQueue.pendingCount();
             if (pending > 0) {
-                sendConsole("<yellow>Discarded " + pending + " pending replants during config reload (queue processes in 1 tick)");
+                int flushed = replantQueue.flush();
+                sendConsole("<yellow>Flushed " + flushed + "/" + pending + " pending replants before queue restart.");
             }
             replantQueue.stop();
         }
         replantQueue = new ReplantQueue(this, maxPerTick, maxQueued, ageMetaRegistry);
         replantQueue.start();
-
     }
 
     public UpdateChecker getUpdateChecker() { return updateChecker; }
-
+    public PlayerToggleManager getPlayerToggleManager() { return playerToggleManager; }
+    public ReplantQueue getReplantQueue() { return replantQueue; }
     public ConfigCache getConfigCache() { return configCacheRef.get(); }
-
     public boolean isEnabledGlobally() { return getConfigCache().enabled(); }
 
     public void setGloballyEnabled(boolean enabled) {
@@ -116,11 +137,17 @@ public final class ReplenishPlusPlus extends JavaPlugin {
     }
 
     public void enqueueReplant(
-            Block block, Material material, int delayTicks, int targetAge, BlockFace cocoaFacing) {
+            Block block, Material material, int delayTicks, int targetAge,
+            BlockFace cocoaFacing, UUID playerId, boolean seedConsumed) {
         ReplantQueue queue = this.replantQueue;
         if (queue != null) {
-            queue.enqueue(block, material, delayTicks, targetAge, cocoaFacing);
+            queue.enqueue(block, material, delayTicks, targetAge, cocoaFacing, playerId, seedConsumed);
         }
+    }
+
+    public QueueStats getQueueStats() {
+        ReplantQueue queue = this.replantQueue;
+        return queue != null ? queue.getStats() : new QueueStats(0, 0, 0);
     }
 
     private void sendConsole(String message) {
