@@ -34,7 +34,11 @@ public final class LocationUtil {
     public static String describe(Block block) {
         if (block == null) return "null_block";
         World world = block.getWorld();
-        String worldName = world.getName();
-        return worldName + ":" + block.getX() + "," + block.getY() + "," + block.getZ();
+        return world.getName() + ":" + block.getX() + "," + block.getY() + "," + block.getZ();
+    }
+
+    public static String describe(World world, int x, int y, int z) {
+        if (world == null) return "null_world:" + x + "," + y + "," + z;
+        return world.getName() + ":" + x + "," + y + "," + z;
     }
 }

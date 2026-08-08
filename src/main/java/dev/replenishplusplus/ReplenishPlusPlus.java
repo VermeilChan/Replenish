@@ -130,7 +130,7 @@ public final class ReplenishPlusPlus extends JavaPlugin {
 
     public UpdateChecker getUpdateChecker() { return updateChecker; }
     public PlayerToggleManager getPlayerToggleManager() { return playerToggleManager; }
-    public ReplantQueue getReplantQueue() { return replantQueue; }
+
     public ConfigCache getConfigCache() { return configCacheRef.get(); }
     public boolean isEnabledGlobally() { return getConfigCache().enabled(); }
 
@@ -147,7 +147,7 @@ public final class ReplenishPlusPlus extends JavaPlugin {
             BlockFace cocoaFacing, UUID playerId, boolean seedConsumed) {
         ReplantQueue queue = this.replantQueue;
         if (queue != null) {
-            queue.enqueue(block, material, delayTicks, targetAge, cocoaFacing, playerId, seedConsumed);
+            queue.enqueue(block.getWorld(), block.getX(), block.getY(), block.getZ(), material, delayTicks, targetAge, cocoaFacing, playerId, seedConsumed);
         }
     }
 

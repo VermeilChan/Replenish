@@ -9,11 +9,6 @@ public record SimpleCropInfo(
         BlockData[] ageStates) implements CropInfo {
 
     public BlockData stateFor(int age) {
-        return ageStates[clamp(age, maximumAge)];
-    }
-
-    private static int clamp(int value, int max) {
-        if (value < 0) return 0;
-        return Math.min(value, max);
+        return ageStates[age];
     }
 }

@@ -11,11 +11,6 @@ public record CocoaCropInfo(
         BlockData[][] ageFacingStates) implements CropInfo {
 
     public BlockData stateFor(int age, int faceOrdinal) {
-        return ageFacingStates[clamp(age, maximumAge)][faceOrdinal & 3];
-    }
-
-    private static int clamp(int value, int max) {
-        if (value < 0) return 0;
-        return Math.min(value, max);
+        return ageFacingStates[age][faceOrdinal & 3];
     }
 }
