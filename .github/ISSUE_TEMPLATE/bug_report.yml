@@ -104,7 +104,8 @@ body:
   - type: dropdown
     id: "config-settings"
     attributes:
-      label: "How is Replenish configured?"
+      label: "How is Replenish configured? (seeds & pickup)"
+      description: "`requirePlayerSeed` and `directPickup` in config.yml."
       options:
         - "Defaults (seeds required + direct pickup)"
         - "Seeds required, drops on ground"
@@ -114,12 +115,37 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: "sneak-to-bypass"
+    attributes:
+      label: "sneakToBypass setting"
+      description: "Sneaking while breaking a crop skips auto-replant entirely."
+      options:
+        - "Enabled (default)"
+        - "Disabled"
+        - "Haven't touched the config"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: "message-style"
+    attributes:
+      label: "messageStyle setting"
+      description: "How player-facing notifications (inventory full, need seed, wrong tool) are shown."
+      options:
+        - "CHAT (default)"
+        - "ACTION_BAR"
+        - "NONE"
+        - "Haven't touched the config"
+    validations:
+      required: true
+
   - type: textarea
     id: "logs"
     attributes:
       label: "Console errors / logs"
       description: |
-        If there's a stack trace or error in console, I need it. Don't paste 400 lines here — use [mclo.gs](https://mclo.gs/) or [Pastebin](https://pastebin.com/) and drop the link.
+        If there's a stack trace or error in console, I need it. Don't paste 400 lines here, use [mclo.gs](https://mclo.gs/) or [Pastebin](https://pastebin.com/) and drop the link.
         No errors? Just write "none".
       placeholder: "https://mclo.gs/..."
     validations:
