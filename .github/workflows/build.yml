@@ -29,7 +29,7 @@ jobs:
 
       - name: Get build date
         id: date
-        run: echo "build_date=$(date -u +'%Y-%m-%dT%H-%M-%SZ')" >> "$GITHUB_OUTPUT"
+        run: echo "build_date=$(date -u +'%d-%m-%Y-%H%M')UTC" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - name: Sanitize branch name
@@ -37,8 +37,8 @@ jobs:
         run: echo "name=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
         shell: bash
 
-      - name: Upload Artifact with short SHA
+      - name: Upload Artifact
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: Replenish-7.0.0-dev+${{ steps.sha.outputs.short_sha }}-mc26.2-${{ steps.branch.outputs.name }}-${{ steps.date.outputs.build_date }}-PaperMC+Folia-run${{ github.run_number }}
+          name: Replenish-7.0.0-dev-mc26.2_branch-${{ steps.branch.outputs.name }}_server-PaperMC+Folia_${{ steps.date.outputs.build_date }}_run${{ github.run_number }}_${{ steps.sha.outputs.short_sha }}
           path: target/*.jar
