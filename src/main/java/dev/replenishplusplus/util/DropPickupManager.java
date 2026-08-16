@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Map;
 
 public final class DropPickupManager {
-
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
 
     private DropPickupManager() {}
@@ -32,12 +31,12 @@ public final class DropPickupManager {
 
         PlayerInventory inventory = player.getInventory();
         Location fallback = player.getLocation();
-
-        boolean anyAdded   = false;
+        boolean anyAdded = false;
         boolean anyDropped = false;
 
         for (ItemStack stack : drops) {
-            if (isInvalid(stack)) continue;
+            if (stack == null || stack.getAmount() <= 0 || stack.getType().isAir()) continue;
+
             try {
                 ItemStack toGive = stack.clone();
                 int originalAmount = toGive.getAmount();
@@ -79,12 +78,8 @@ public final class DropPickupManager {
         }
     }
 
-    private static boolean isInvalid(ItemStack stack) {
-        return stack == null || stack.getAmount() <= 0 || stack.getType().isAir();
-    }
-
     private static void dropSafely(Location preferred, Location fallback, ItemStack stack) {
-        if (LocationUtil.isChunkLoadedAround(preferred)) {
+        if (preferred.getWorld() != null && LocationUtil.isChunkLoadedAround(preferred)) {
             preferred.getWorld().dropItemNaturally(preferred, stack);
         } else if (fallback.getWorld() != null) {
             fallback.getWorld().dropItemNaturally(fallback, stack);
