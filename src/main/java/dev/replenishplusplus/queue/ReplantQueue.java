@@ -23,20 +23,19 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 public final class ReplantQueue {
-
-    private static final int WHEEL_BITS         = 13;
-    private static final int WHEEL_SIZE         = 1 << WHEEL_BITS;
-    private static final int WHEEL_MASK         = WHEEL_SIZE - 1;
-    private static final int INITIAL_POOL_SIZE  = 1 << 10;
+    private static final int WHEEL_BITS = 13;
+    private static final int WHEEL_SIZE = 1 << WHEEL_BITS;
+    private static final int WHEEL_MASK = WHEEL_SIZE - 1;
+    private static final int INITIAL_POOL_SIZE = 1 << 10;
     private static final int MAX_UNLOAD_RETRIES = 20;
 
-    private static final int AGE_MASK        = 0xFF;
-    private static final int FACE_SHIFT      = 8;
-    private static final int FACE_MASK       = 0x3;
-    private static final int RETRY_SHIFT     = 10;
-    private static final int RETRY_MASK      = 0xFF;
+    private static final int AGE_MASK = 0xFF;
+    private static final int FACE_SHIFT = 8;
+    private static final int FACE_MASK = 0x3;
+    private static final int RETRY_SHIFT = 10;
+    private static final int RETRY_MASK = 0xFF;
     private static final int SEED_FLAG_SHIFT = 18;
-    private static final int SEED_FLAG_MASK  = 0x1;
+    private static final int SEED_FLAG_MASK = 0x1;
 
     private final ReplenishPlusPlus plugin;
     private final AgeMetaRegistry ageMetaRegistry;
@@ -45,26 +44,26 @@ public final class ReplantQueue {
 
     private final int[] wheelHeads = new int[WHEEL_SIZE];
 
-    private World[]     poolWorlds;
-    private int[]        poolX;
-    private int[]        poolY;
-    private int[]        poolZ;
-    private Material[]   poolMaterials;
-    private int[]        poolMeta;
-    private int[]        poolNext;
-    private UUID[]       poolPlayerIds;
+    private World[] poolWorlds;
+    private int[] poolX;
+    private int[] poolY;
+    private int[] poolZ;
+    private Material[] poolMaterials;
+    private int[] poolMeta;
+    private int[] poolNext;
+    private UUID[] poolPlayerIds;
 
     private int freeHead = -1;
-    private int cursor   = 0;
+    private int cursor = 0;
     private int pendingCount = 0;
     private ScheduledTask scheduledTask;
     private volatile boolean started = false;
 
     public ReplantQueue(ReplenishPlusPlus plugin, int maxPerTick, int maxPoolSize, AgeMetaRegistry ageMetaRegistry) {
-        this.plugin          = plugin;
+        this.plugin = plugin;
         this.ageMetaRegistry = ageMetaRegistry;
-        this.maxPerTick      = Math.max(256, maxPerTick);
-        this.maxPoolSize     = Math.max(256, maxPoolSize);
+        this.maxPerTick = Math.max(256, maxPerTick);
+        this.maxPoolSize = Math.max(256, maxPoolSize);
         Arrays.fill(wheelHeads, -1);
         primePool();
     }
@@ -177,18 +176,18 @@ public final class ReplantQueue {
             }
 
             int delay = clampDelay(delayTicks, world, x, y, z);
-            int slot  = (cursor + delay) & WHEEL_MASK;
+            int slot = (cursor + delay) & WHEEL_MASK;
             int index = acquire();
 
-            poolWorlds[index]    = world;
-            poolX[index]         = x;
-            poolY[index]         = y;
-            poolZ[index]         = z;
+            poolWorlds[index] = world;
+            poolX[index] = x;
+            poolY[index] = y;
+            poolZ[index] = z;
             poolMaterials[index] = material;
-            poolMeta[index]      = packMeta(targetAge, cocoaFacing, seedConsumed);
+            poolMeta[index] = packMeta(targetAge, cocoaFacing, seedConsumed);
             poolPlayerIds[index] = playerId;
-            poolNext[index]      = wheelHeads[slot];
-            wheelHeads[slot]     = index;
+            poolNext[index] = wheelHeads[slot];
+            wheelHeads[slot] = index;
             pendingCount++;
         } catch (IllegalStateException e) {
             WarningThrottle.log(plugin, Level.WARNING, WarningThrottle.Category.QUEUE_BACKPRESSURE,
@@ -206,7 +205,7 @@ public final class ReplantQueue {
         }
         wheelHeads[cursor] = -1;
 
-        int processed    = 0;
+        int processed = 0;
         int deferredHead = -1;
         int deferredTail = -1;
 
@@ -220,11 +219,8 @@ public final class ReplantQueue {
             poolNext[head] = -1;
 
             if (processed >= maxPerTick) {
-                if (deferredHead == -1) {
-                    deferredHead = head;
-                } else {
-                    poolNext[deferredTail] = head;
-                }
+                if (deferredHead == -1) deferredHead = head;
+                else poolNext[deferredTail] = head;
                 deferredTail = head;
                 head = next;
                 continue;
@@ -277,11 +273,8 @@ public final class ReplantQueue {
                 processed++;
             } else {
                 incrementRetry(head);
-                if (deferredHead == -1) {
-                    deferredHead = head;
-                } else {
-                    poolNext[deferredTail] = head;
-                }
+                if (deferredHead == -1) deferredHead = head;
+                else poolNext[deferredTail] = head;
                 deferredTail = head;
             }
             head = next;
@@ -290,7 +283,7 @@ public final class ReplantQueue {
         int nextSlot = (cursor + 1) & WHEEL_MASK;
         if (deferredHead != -1) {
             poolNext[deferredTail] = wheelHeads[nextSlot];
-            wheelHeads[nextSlot]   = deferredHead;
+            wheelHeads[nextSlot] = deferredHead;
         }
         cursor = nextSlot;
     }
@@ -309,14 +302,14 @@ public final class ReplantQueue {
             return true;
         }
 
-        int metadata    = poolMeta[index];
-        int targetAge   = metadata & AGE_MASK;
+        int metadata = poolMeta[index];
+        int targetAge = metadata & AGE_MASK;
         int faceOrdinal = (metadata >>> FACE_SHIFT) & FACE_MASK;
-        UUID playerId   = poolPlayerIds[index];
+        UUID playerId = poolPlayerIds[index];
         boolean seedConsumed = seedWasConsumed(index);
-        int x           = poolX[index];
-        int y           = poolY[index];
-        int z           = poolZ[index];
+        int x = poolX[index];
+        int y = poolY[index];
+        int z = poolZ[index];
 
         if (plugin.getServer().isOwnedByCurrentRegion(world, x, z)) {
             doReplant(world, x, y, z, material, info, targetAge, faceOrdinal, playerId, seedConsumed);
@@ -333,9 +326,9 @@ public final class ReplantQueue {
         try {
             boolean success;
             switch (info) {
-                case CocoaCropInfo cocoa  -> success = replantCocoa(world, x, y, z, cocoa, targetAge, faceOrdinal);
+                case CocoaCropInfo cocoa -> success = replantCocoa(world, x, y, z, cocoa, targetAge, faceOrdinal);
                 case SimpleCropInfo simple -> success = replantNormal(world, x, y, z, simple, targetAge);
-                default                    -> success = true;
+                default -> success = true;
             }
             if (!success) {
                 handleReplantFailure(world, x, y, z, material, playerId, seedConsumed);
@@ -349,17 +342,11 @@ public final class ReplantQueue {
 
     private boolean replantNormal(World world, int x, int y, int z, SimpleCropInfo info, int targetAge) {
         Block block = world.getBlockAt(x, y, z);
-        if (block.getType() != Material.AIR) {
-            return false;
-        }
+        if (block.getType() != Material.AIR) return false;
 
         Material below = world.getBlockAt(x, y - 1, z).getType();
-        if (info.requiresFarmland() && below != Material.FARMLAND) {
-            return false;
-        }
-        if (info.requiresSoulSand() && below != Material.SOUL_SAND) {
-            return false;
-        }
+        if (info.requiresFarmland() && below != Material.FARMLAND) return false;
+        if (info.requiresSoulSand() && below != Material.SOUL_SAND) return false;
 
         block.setBlockData(info.stateFor(targetAge), false);
         return true;
@@ -367,15 +354,11 @@ public final class ReplantQueue {
 
     private boolean replantCocoa(World world, int x, int y, int z, CocoaCropInfo info, int targetAge, int faceOrdinal) {
         Block block = world.getBlockAt(x, y, z);
-        if (block.getType() != Material.AIR) {
-            return false;
-        }
+        if (block.getType() != Material.AIR) return false;
 
         BlockFace face = AgeMetaRegistry.COCOA_FACES.get(faceOrdinal);
         Material attachedType = world.getBlockAt(x + face.getModX(), y + face.getModY(), z + face.getModZ()).getType();
-        if (!CropAnchors.JUNGLE_LOGS.contains(attachedType)) {
-            return false;
-        }
+        if (!CropAnchors.JUNGLE_LOGS.contains(attachedType)) return false;
 
         block.setBlockData(info.stateFor(targetAge, faceOrdinal), false);
         return true;
@@ -458,25 +441,25 @@ public final class ReplantQueue {
     }
 
     private static int faceToOrdinal(BlockFace face) {
-        if (face == BlockFace.EAST)  return 1;
+        if (face == BlockFace.EAST) return 1;
         if (face == BlockFace.SOUTH) return 2;
-        if (face == BlockFace.WEST)  return 3;
+        if (face == BlockFace.WEST) return 3;
         return 0;
     }
 
     private void primePool() {
         int size = Math.min(INITIAL_POOL_SIZE, maxPoolSize);
-        poolWorlds    = new World[size];
-        poolX         = new int[size];
-        poolY         = new int[size];
-        poolZ         = new int[size];
+        poolWorlds = new World[size];
+        poolX = new int[size];
+        poolY = new int[size];
+        poolZ = new int[size];
         poolMaterials = new Material[size];
-        poolMeta      = new int[size];
-        poolNext      = new int[size];
+        poolMeta = new int[size];
+        poolNext = new int[size];
         poolPlayerIds = new UUID[size];
         for (int i = size - 1; i >= 0; i--) {
             poolNext[i] = freeHead;
-            freeHead    = i;
+            freeHead = i;
         }
     }
 
@@ -495,13 +478,13 @@ public final class ReplantQueue {
             throw new IllegalStateException("Replant pool exhausted (max=" + maxPoolSize + ")");
         }
 
-        poolWorlds    = Arrays.copyOf(poolWorlds,    newSize);
-        poolX         = Arrays.copyOf(poolX,         newSize);
-        poolY         = Arrays.copyOf(poolY,         newSize);
-        poolZ         = Arrays.copyOf(poolZ,         newSize);
+        poolWorlds = Arrays.copyOf(poolWorlds, newSize);
+        poolX = Arrays.copyOf(poolX, newSize);
+        poolY = Arrays.copyOf(poolY, newSize);
+        poolZ = Arrays.copyOf(poolZ, newSize);
         poolMaterials = Arrays.copyOf(poolMaterials, newSize);
-        poolMeta      = Arrays.copyOf(poolMeta,      newSize);
-        poolNext      = Arrays.copyOf(poolNext,      newSize);
+        poolMeta = Arrays.copyOf(poolMeta, newSize);
+        poolNext = Arrays.copyOf(poolNext, newSize);
         poolPlayerIds = Arrays.copyOf(poolPlayerIds, newSize);
 
         for (int i = newSize - 1; i >= oldSize; i--) {
@@ -512,7 +495,7 @@ public final class ReplantQueue {
     private int acquire() {
         if (freeHead == -1) growPool();
         int index = freeHead;
-        freeHead  = poolNext[index];
+        freeHead = poolNext[index];
         poolNext[index] = -1;
         return index;
     }
@@ -523,14 +506,14 @@ public final class ReplantQueue {
     }
 
     private void freeSlot(int index) {
-        poolWorlds[index]    = null;
-        poolX[index]         = 0;
-        poolY[index]         = 0;
-        poolZ[index]         = 0;
+        poolWorlds[index] = null;
+        poolX[index] = 0;
+        poolY[index] = 0;
+        poolZ[index] = 0;
         poolMaterials[index] = null;
-        poolMeta[index]      = 0;
+        poolMeta[index] = 0;
         poolPlayerIds[index] = null;
-        poolNext[index]      = freeHead;
-        freeHead             = index;
+        poolNext[index] = freeHead;
+        freeHead = index;
     }
 }

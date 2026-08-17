@@ -36,7 +36,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -47,11 +46,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public final class ReplenishPlusPlusListener implements Listener {
-
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
 
     private static final long INVALIDATION_COOLDOWN_MS = 50L;
-    private static final long MESSAGE_COOLDOWN_MS      = 2000L;
+    private static final long MESSAGE_COOLDOWN_MS = 2000L;
 
     private static final BlockFace[] HORIZONTAL_FACES = {
             BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST
@@ -69,7 +67,7 @@ public final class ReplenishPlusPlusListener implements Listener {
     private final ReplenishPlusPlus plugin;
     private final AgeMetaRegistry ageMetaRegistry;
     private final Map<UUID, Long> lastInvalidation = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> messageCooldown  = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> messageCooldown = new ConcurrentHashMap<>();
 
     public ReplenishPlusPlusListener(ReplenishPlusPlus plugin, AgeMetaRegistry ageMetaRegistry) {
         this.plugin = plugin;
@@ -86,24 +84,18 @@ public final class ReplenishPlusPlusListener implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getWhoClicked() instanceof Player player) {
-            invalidateWithCooldown(player);
-        }
+        if (event.getWhoClicked() instanceof Player player) invalidateWithCooldown(player);
     }
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
-        if (isRelevantSeed(event.getOldCursor()) || isRelevantSeed(event.getCursor())) {
-            invalidateWithCooldown(player);
-        }
+        if (isRelevantSeed(event.getOldCursor()) || isRelevantSeed(event.getCursor())) invalidateWithCooldown(player);
     }
 
     @EventHandler
     public void onSwapHands(PlayerSwapHandItemsEvent event) {
-        if (isRelevantSeed(event.getMainHandItem()) || isRelevantSeed(event.getOffHandItem())) {
-            invalidateWithCooldown(event.getPlayer());
-        }
+        if (isRelevantSeed(event.getMainHandItem()) || isRelevantSeed(event.getOffHandItem())) invalidateWithCooldown(event.getPlayer());
     }
 
     @EventHandler
@@ -115,16 +107,12 @@ public final class ReplenishPlusPlusListener implements Listener {
 
     @EventHandler
     public void onDropItem(PlayerDropItemEvent event) {
-        if (isRelevantSeed(event.getItemDrop().getItemStack())) {
-            invalidateWithCooldown(event.getPlayer());
-        }
+        if (isRelevantSeed(event.getItemDrop().getItemStack())) invalidateWithCooldown(event.getPlayer());
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && isRelevantSeed(event.getItem())) {
-            invalidateWithCooldown(event.getPlayer());
-        }
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK && isRelevantSeed(event.getItem())) invalidateWithCooldown(event.getPlayer());
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
@@ -143,9 +131,7 @@ public final class ReplenishPlusPlusListener implements Listener {
 
         ConfigCache config = plugin.getConfigCache();
         if (!config.enabled()) return;
-
         if (!plugin.getPlayerToggleManager().isEnabled(player)) return;
-
         if (config.sneakToBypass() && player.isSneaking()) return;
 
         Block block = event.getBlock();
@@ -170,17 +156,13 @@ public final class ReplenishPlusPlusListener implements Listener {
         boolean wasMature = originalAge >= info.maximumAge();
         int replantedAge = wasMature ? 0 : originalAge;
 
-        boolean seedConsumed = false;
-        Collection<ItemStack> drops = wasMature
-                ? new ArrayList<>(block.getDrops(tool, player))
-                : Collections.emptyList();
+        Collection<ItemStack> drops = wasMature ? block.getDrops(tool, player) : Collections.emptyList();
 
+        boolean seedConsumed = false;
         if (wasMature && config.requirePlayerSeed()) {
             if (!consumeSeed(player, config, crop)) return;
             seedConsumed = true;
         }
-
-        drops.removeIf(drop -> drop == null || drop.getAmount() <= 0);
 
         event.setDropItems(false);
         distributeDrops(player, block, config, drops);
@@ -193,9 +175,7 @@ public final class ReplenishPlusPlusListener implements Listener {
     }
 
     private boolean hasValidAnchor(Block block, CropType crop) {
-        if (crop.isCocoa()) {
-            return findAdjacentJungle(block) != null;
-        }
+        if (crop.isCocoa()) return findAdjacentJungle(block) != null;
         Material below = block.getRelative(BlockFace.DOWN).getType();
         if (crop.isNetherWart()) return below == Material.SOUL_SAND;
         return below == Material.FARMLAND;
@@ -235,8 +215,7 @@ public final class ReplenishPlusPlusListener implements Listener {
         }
     }
 
-    private void distributeDrops(
-            Player player, Block block, ConfigCache config, Collection<ItemStack> drops) {
+    private void distributeDrops(Player player, Block block, ConfigCache config, Collection<ItemStack> drops) {
         if (drops.isEmpty()) return;
 
         Location dropLocation = LocationUtil.centerOf(block.getLocation());
@@ -273,18 +252,11 @@ public final class ReplenishPlusPlusListener implements Listener {
     }
 
     private BlockFace determineCocoaFacing(Block block, BlockData originalData, Player player) {
-        BlockFace originalFacing = originalData instanceof Directional directional
-                ? directional.getFacing()
-                : null;
-
-        if (originalFacing != null && isJungle(block.getRelative(originalFacing).getType())) {
-            return originalFacing;
-        }
+        BlockFace originalFacing = originalData instanceof Directional directional ? directional.getFacing() : null;
+        if (originalFacing != null && isJungle(block.getRelative(originalFacing).getType())) return originalFacing;
 
         BlockFace playerFacing = getPlayerHorizontalFace(player);
-        if (playerFacing != null && isJungle(block.getRelative(playerFacing).getType())) {
-            return playerFacing;
-        }
+        if (playerFacing != null && isJungle(block.getRelative(playerFacing).getType())) return playerFacing;
 
         return findAdjacentJungle(block);
     }
@@ -292,7 +264,7 @@ public final class ReplenishPlusPlusListener implements Listener {
     private BlockFace getPlayerHorizontalFace(Player player) {
         float yaw = player.getLocation().getYaw();
         float normalized = (yaw % 360 + 360) % 360;
-        if (normalized < 45  || normalized >= 315) return BlockFace.SOUTH;
+        if (normalized < 45 || normalized >= 315) return BlockFace.SOUTH;
         if (normalized < 135) return BlockFace.WEST;
         if (normalized < 225) return BlockFace.NORTH;
         return BlockFace.EAST;
